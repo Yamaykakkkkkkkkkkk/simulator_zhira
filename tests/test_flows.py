@@ -555,3 +555,130 @@ async def test_fcooldown_non_owner_ignored(env):
     async with env.sm() as s:
         row = (await s.scalars(select(BotSetting).where(BotSetting.key == "no_cooldown"))).first()
     assert row is None or row.value != "1"
+
+
+@pytest.mark.asyncio
+async def test_fconfig_menu(env):
+    await env.send("/fconfig", user_id=401, username="cfg")
+    joined = "\n".join(env.bot.texts())
+    assert "настроить" in joined
+    assert "Уведомления" in joined
+
+
+@pytest.mark.asyncio
+async def test_fatshop_buy(env):
+    async with env.sm() as s:
+        s.add(User(id=402, username="shop"))
+        await s.commit()
+    await seed_points(env, 402, 50_000)
+    await env.send("/fatshop", user_id=402, username="shop")
+    joined = "\n".join(env.bot.texts())
+    assert "магазин жиров" in joined
+    await env.tap("fatshop:rare", user_id=402)
+    await env.tap("fatshop_buy:rare", user_id=402)
+    u = await env.db_user(402)
+    assert u.cards_opened == 1
+
+
+@pytest.mark.asyncio
+async def test_fquests_menu(env):
+    await env.send("/fquests", user_id=403, username="quest")
+    joined = "\n".join(env.bot.texts())
+    assert "квестов" in joined
+    assert "Еженедельные" in joined
+
+
+@pytest.mark.asyncio
+async def test_achievements_catalog(env):
+    async with env.sm() as s:
+        s.add(User(id=404, username="ach"))
+        await s.commit()
+    await env.send("/fcard", user_id=404)
+    await env.send("/achievements", user_id=404)
+    joined = "\n".join(env.bot.texts())
+    assert "каталог достижений" in joined
+    assert "Первая карточка" in joined
+
+
+@pytest.mark.asyncio
+async def test_mycontainers_empty(env):
+    await env.send("/mycontainers", user_id=405, username="cont")
+    joined = "\n".join(env.bot.texts())
+    assert "контейнер" in joined
+    assert "нет контейнеров" in joined
+
+
+@pytest.mark.asyncio
+async def test_fcontainershop(env):
+    await env.send("/fcontainershop", user_id=406, username="cshop")
+    joined = "\n".join(env.bot.texts())
+    assert "магазин контейнеров" in joined
+
+
+@pytest.mark.asyncio
+async def test_workshoplist_empty(env):
+    await env.send("/workshoplist", user_id=407, username="wl")
+    joined = "\n".join(env.bot.texts())
+    assert "мастерских" in joined
+
+
+@pytest.mark.asyncio
+async def test_ffarm_no_farm(env):
+    await env.send("/ffarm", user_id=408, username="farm")
+    joined = "\n".join(env.bot.texts())
+    assert "ферм" in joined
+
+
+@pytest.mark.asyncio
+async def test_fduel_groups_only(env):
+    await env.send("/fduel", user_id=409, username="duel")
+    joined = "\n".join(env.bot.texts())
+    assert "группах" in joined
+
+
+@pytest.mark.asyncio
+async def test_roulette_external(env):
+    await env.send("/roulette", user_id=410, username="roul")
+    joined = "\n".join(env.bot.texts())
+    assert "рулетк" in joined
+
+
+@pytest.mark.asyncio
+async def test_fexchange_menu(env):
+    await env.send("/fexchange", user_id=411, username="exch")
+    joined = "\n".join(env.bot.texts())
+    assert "Биржа" in joined
+    assert "F-Coin" in joined
+
+
+@pytest.mark.asyncio
+async def test_fexchange_buy_insufficient(env):
+    async with env.sm() as s:
+        s.add(User(id=412, username="exch2"))
+        await s.commit()
+    await env.tap("exch_buy", user_id=412)
+    assert any("Недостаточно" in t for t in env.bot.texts())
+
+
+@pytest.mark.asyncio
+async def test_fexchange_buy_success(env):
+    async with env.sm() as s:
+        s.add(User(id=413, username="exch3"))
+        await s.commit()
+    await seed_points(env, 413, 2_000_000)
+    await env.tap("exch_buy", user_id=413)
+    u = await env.db_user(413)
+    assert u.fcoins == 1
+    assert u.points == 1_000_000
+
+
+@pytest.mark.asyncio
+async def test_fexchange_sell(env):
+    async with env.sm() as s:
+        s.add(User(id=414, username="exch4"))
+        await s.commit()
+    await seed_points(env, 414, 0, fcoins=1)
+    await env.tap("exch_sell", user_id=414)
+    u = await env.db_user(414)
+    assert u.fcoins == 0
+    assert u.points == 950_000

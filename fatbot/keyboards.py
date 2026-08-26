@@ -10,7 +10,9 @@ def main_kb() -> ReplyKeyboardMarkup:
         [KeyboardButton(text="🎰 Казино"), KeyboardButton(text="📢 Авито")],
         [KeyboardButton(text="🛒 ФШоп"), KeyboardButton(text="⬆️ Улучшения")],
         [KeyboardButton(text="🏪 Мастерская"), KeyboardButton(text="🎁 Бонус")],
-        [KeyboardButton(text="🤝 Рефералы")],
+        [KeyboardButton(text="🤝 Рефералы"), KeyboardButton(text="📦 Контейнеры")],
+        [KeyboardButton(text="🏭 Ферма"), KeyboardButton(text="📜 Квесты")],
+        [KeyboardButton(text="🛒 Магазин жиров"), KeyboardButton(text="⚙️ Настройки")],
     ]
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 

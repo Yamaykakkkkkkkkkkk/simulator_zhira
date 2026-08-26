@@ -126,3 +126,38 @@ CASINO_MIN_BET = 100
 CASINO_MAX_BET = 1_000_000
 SLOTS_SYMBOLS = ["🐷", "🍔", "🍟", "🍺", "🍩", "🥓"]
 BET_PRESETS = [1_000, 10_000, 100_000, 1_000_000]
+
+DAILY_QUESTS = [
+    {"key": "buy2", "desc": "Купить 2 жира в магазине", "target": 2, "reward": 7_000, "category": "fatshop"},
+    {"key": "casino1", "desc": "Сыграть в казино 1 раз", "target": 1, "reward": 7_500, "category": "casino"},
+    {"key": "open5", "desc": "Открыть 5 карточек", "target": 5, "reward": 8_000, "category": "fcard"},
+]
+
+WEEKLY_QUESTS = [
+    {"key": "workshop_collect", "desc": "Собрать 500,000 ФОчек с мастерской", "target": 500_000, "reward": 150_000, "category": "workshop"},
+    {"key": "buy20", "desc": "Купить 20 жиров в магазине", "target": 20, "reward": 120_000, "category": "fatshop"},
+    {"key": "avito_sell", "desc": "Продать жиров на Авито на 1,000,000 ФОчек", "target": 1_000_000, "reward": 200_000, "category": "market"},
+]
+
+CONTAINER_TYPES = [
+    {"key": "wooden", "name": "Деревянный ящик", "emoji": "📦", "capacity": 5, "price": 50_000, "desc": "Вмещает 5 жиров"},
+    {"key": "metal", "name": "Металлический контейнер", "emoji": "📦", "capacity": 10, "price": 150_000, "desc": "Вмещает 10 жиров"},
+    {"key": "golden", "name": "Золотой контейнер", "emoji": "📦", "capacity": 15, "price": 500_000, "desc": "Вмещает 15 жиров"},
+]
+CONTAINER_BY_KEY = {c["key"]: c for c in CONTAINER_TYPES}
+
+MAX_CONTAINERS = 5
+
+FATSHOP_PRICES = {
+    "common": 1_500,
+    "rare": 15_000,
+    "epic": 150_000,
+    "legendary": 1_500_000,
+    "mythic": 15_000_000,
+}
+
+FARM_POWER = {1: 50, 2: 100, 3: 200}
+FARM_COOLING = {1: 45, 2: 90, 3: 180}
+FARM_SLOTS = {1: 2, 2: 3, 3: 4}
+FARM_UPGRADE_COST = {1: 100_000, 2: 500_000}
+FARM_FCOIN_PER_HOUR = {1: 5, 2: 10, 3: 20}

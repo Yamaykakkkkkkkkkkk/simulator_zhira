@@ -1,5 +1,7 @@
-from . import (admin, card, casino, collection, daily, market, misc, pay, profile,
-               ref, sellall, shop, start, trade, upgrade, upgradeshop, workshop)
+from . import (admin, achievements, auction, card, casino, collection, config, containers,
+               daily, duel, exchange, fatshop, farm, market, misc, pay, profile, quests,
+               ref, roulette, sellall, shop, start, trade, upgrade, upgradeshop, workshop,
+               workshoplist)
 from aiogram import Router
 
 
@@ -22,6 +24,17 @@ def build_router() -> Router:
         daily,
         ref,
         admin,
+        config,
+        fatshop,
+        quests,
+        achievements,
+        containers,
+        workshoplist,
+        farm,
+        auction,
+        exchange,
+        roulette,
+        duel,
         misc,
     ):
         root.include_router(mod.router)

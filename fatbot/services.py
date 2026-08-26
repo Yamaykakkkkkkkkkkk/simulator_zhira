@@ -28,6 +28,22 @@ async def cooldown_disabled(session: AsyncSession) -> bool:
     return (await get_setting(session, "no_cooldown")) == "1"
 
 
+async def get_user_setting(session: AsyncSession, user_id: int, key: str) -> str | None:
+    from .models import UserSetting
+    row = await session.get(UserSetting, (user_id, key))
+    return row.value if row else None
+
+
+async def set_user_setting(session: AsyncSession, user_id: int, key: str, value: str):
+    from .models import UserSetting
+    row = await session.get(UserSetting, (user_id, key))
+    if row is None:
+        session.add(UserSetting(user_id=user_id, key=key, value=value))
+    else:
+        row.value = value
+    await session.flush()
+
+
 async def get_or_create_user(session: AsyncSession, tg_id: int, username: str | None, full_name: str) -> User:
     user = await session.get(User, tg_id)
     if user is None:
@@ -356,3 +372,241 @@ async def register_referral(session: AsyncSession, new_user: User, payload: int)
     session.add(Referral(referrer_id=payload, referred_id=new_user.id))
     await session.flush()
     return True
+
+
+async def get_quest_progress(session: AsyncSession, user_id: int, quest_key: str):
+    from .models import UserQuest
+    q = select(UserQuest).where(UserQuest.user_id == user_id, UserQuest.quest_key == quest_key)
+    return (await session.scalars(q)).first()
+
+
+async def update_quest_progress(session: AsyncSession, user_id: int, quest_key: str, amount: int = 1):
+    from .models import UserQuest
+    from .data import DAILY_QUESTS, WEEKLY_QUESTS
+    from .utils import utcnow
+    from datetime import timedelta
+
+    quest_def = None
+    for q in DAILY_QUESTS + WEEKLY_QUESTS:
+        if q["key"] == quest_key:
+            quest_def = q
+            break
+    if not quest_def:
+        return
+
+    is_weekly = quest_key in [q["key"] for q in WEEKLY_QUESTS]
+    q = select(UserQuest).where(UserQuest.user_id == user_id, UserQuest.quest_key == quest_key)
+    quest = (await session.scalars(q)).first()
+
+    if quest is None:
+        now = utcnow()
+        if is_weekly:
+            days_ahead = 7 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            reset_at = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days_ahead)
+        else:
+            reset_at = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+
+        quest = UserQuest(
+            user_id=user_id,
+            quest_key=quest_key,
+            quest_type="weekly" if is_weekly else "daily",
+            progress=0,
+            target=quest_def["target"],
+            reward=quest_def["reward"],
+            reward_fcoins=0,
+            completed=False,
+            claimed=False,
+            reset_at=reset_at,
+        )
+        session.add(quest)
+
+    if not quest.completed:
+        quest.progress = min(quest.progress + amount, quest.target)
+        if quest.progress >= quest.target:
+            quest.completed = True
+    await session.flush()
+
+
+async def claim_quest(session: AsyncSession, user_id: int, quest_key: str):
+    from .models import UserQuest
+
+    quest = await get_quest_progress(session, user_id, quest_key)
+    if quest is None or not quest.completed or quest.claimed:
+        return None
+
+    quest.claimed = True
+    user = await session.get(User, user_id)
+    if user:
+        user.points += quest.reward
+    await session.flush()
+    return quest.reward
+
+
+async def get_containers(session: AsyncSession, user_id: int):
+    from .models import Container
+    q = select(Container).where(Container.user_id == user_id)
+    return list((await session.scalars(q)).all())
+
+
+async def total_container_capacity(session: AsyncSession, user_id: int) -> int:
+    containers = await get_containers(session, user_id)
+    return sum(c.capacity for c in containers)
+
+
+async def buy_container(session: AsyncSession, user_id: int, ctype: str):
+    from .models import Container
+    from .data import CONTAINER_BY_KEY, MAX_CONTAINERS
+
+    item = CONTAINER_BY_KEY.get(ctype)
+    if item is None:
+        return None, "Тип контейнера не найден."
+
+    containers = await get_containers(session, user_id)
+    if len(containers) >= MAX_CONTAINERS:
+        return None, "У вас максимальное количество контейнеров."
+
+    user = await session.get(User, user_id)
+    if user.points < item["price"]:
+        return None, "Недостаточно ФОчек."
+
+    user.points -= item["price"]
+    container = Container(user_id=user_id, ctype=ctype, capacity=item["capacity"])
+    session.add(container)
+    await session.flush()
+    return container, None
+
+
+async def buy_fatshop_card(session: AsyncSession, user: User, rarity: str, card_name: str):
+    from .data import RARITIES, FATSHOP_PRICES
+    import random as _r
+
+    d = RARITIES.get(rarity)
+    if d is None:
+        return None, "Редкость не найдена."
+
+    price = FATSHOP_PRICES.get(rarity, 1000)
+    if user.points < price:
+        return None, "Недостаточно ФОчек."
+
+    weight = _r.randint(d["min"], d["max"])
+    defects = []
+    if _r.random() < 0.2:
+        from .data import DEFECTS
+        defects = _r.sample(DEFECTS, _r.randint(1, 2))
+
+    card_price = int(weight * d["ppk"] * (0.8 ** len(defects)))
+    card = UserCard(
+        user_id=user.id,
+        rarity=rarity,
+        name=card_name,
+        weight=weight,
+        defects=defects,
+        base_price=card_price,
+    )
+    session.add(card)
+    user.points -= price
+    user.cards_opened += 1
+    await session.flush()
+    return card, None
+
+
+async def get_achievements_catalog(session: AsyncSession, user_id: int):
+    from .models import Achievement
+    from .data import ACHIEVEMENTS
+
+    owned = set(
+        (await session.scalars(select(Achievement.key).where(Achievement.user_id == user_id))).all()
+    )
+
+    catalog = []
+    for key, title in ACHIEVEMENTS:
+        catalog.append({
+            "key": key,
+            "title": title,
+            "owned": key in owned,
+        })
+    return catalog
+
+
+async def get_workshops(session: AsyncSession, limit: int = 10):
+    q = select(User).where(User.workshop_lvl > 0).order_by(User.workshop_lvl.desc()).limit(limit)
+    return list((await session.scalars(q)).all())
+
+
+async def create_auction(session: AsyncSession, seller_id: int, card_id: int, starting_bid: int):
+    from .models import Auction
+    from datetime import timedelta
+    from .utils import utcnow
+
+    card = await session.get(UserCard, card_id)
+    if card is None or card.user_id != seller_id or card.listed:
+        return None, "Жир недоступен."
+
+    existing = await session.scalars(
+        select(Auction).where(Auction.card_id == card_id, Auction.ends_at > utcnow())
+    )
+    if existing.first() is not None:
+        return None, "Жир уже на аукционе."
+
+    auction = Auction(
+        seller_id=seller_id,
+        card_id=card_id,
+        current_bid=starting_bid,
+        ends_at=utcnow() + timedelta(hours=24),
+    )
+    session.add(auction)
+    card.listed = True
+    await session.flush()
+    return auction, None
+
+
+async def place_bid(session: AsyncSession, auction_id: int, bidder_id: int, amount: int):
+    from .models import Auction
+    from .utils import utcnow
+
+    auction = await session.get(Auction, auction_id)
+    if auction is None or auction.ends_at <= utcnow():
+        return None, "Аукцион не найден или завершён."
+
+    if auction.seller_id == bidder_id:
+        return None, "Нельзя ставить на свой лот."
+
+    if amount <= auction.current_bid:
+        return None, "Ставка должна быть больше текущей."
+
+    bidder = await session.get(User, bidder_id)
+    if bidder.points < amount:
+        return None, "Недостаточно ФОчек."
+
+    if auction.current_bidder is not None:
+        prev_bidder = await session.get(User, auction.current_bidder)
+        if prev_bidder:
+            prev_bidder.points += auction.current_bid
+
+    bidder.points -= amount
+    auction.current_bid = amount
+    auction.current_bidder = bidder_id
+    await session.flush()
+    return auction, None
+
+
+async def get_farm(session: AsyncSession, user_id: int):
+    from .models import Farm
+    q = select(Farm).where(Farm.user_id == user_id)
+    return (await session.scalars(q)).first()
+
+
+async def create_farm(session: AsyncSession, user_id: int, cost: int):
+    from .models import Farm
+
+    user = await session.get(User, user_id)
+    if user.points < cost:
+        return None, "Недостаточно ФОчек."
+
+    user.points -= cost
+    farm = Farm(user_id=user_id)
+    session.add(farm)
+    await session.flush()
+    return farm, None

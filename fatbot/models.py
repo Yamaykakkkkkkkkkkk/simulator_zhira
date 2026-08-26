@@ -92,3 +92,62 @@ class BotSetting(Base):
     __tablename__ = "bot_settings"
     key: Mapped[str] = mapped_column(String(32), primary_key=True)
     value: Mapped[str] = mapped_column(String(64), default="")
+
+
+class UserSetting(Base):
+    __tablename__ = "user_settings"
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    key: Mapped[str] = mapped_column(String(32), primary_key=True)
+    value: Mapped[str] = mapped_column(String(64), default="")
+
+
+class UserQuest(Base):
+    __tablename__ = "user_quests"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    quest_key: Mapped[str] = mapped_column(String(32))
+    quest_type: Mapped[str] = mapped_column(String(8))
+    progress: Mapped[int] = mapped_column(Integer, default=0)
+    target: Mapped[int] = mapped_column(Integer)
+    reward: Mapped[int] = mapped_column(BigInteger)
+    reward_fcoins: Mapped[int] = mapped_column(Integer, default=0)
+    completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    claimed: Mapped[bool] = mapped_column(Boolean, default=False)
+    reset_at: Mapped[datetime] = mapped_column(DateTime)
+    __table_args__ = (UniqueConstraint("user_id", "quest_key", name="uq_user_quest"),)
+
+
+class Container(Base):
+    __tablename__ = "containers"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), index=True)
+    ctype: Mapped[str] = mapped_column(String(32))
+    capacity: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Auction(Base):
+    __tablename__ = "auctions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    seller_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    card_id: Mapped[int] = mapped_column(Integer, ForeignKey("user_cards.id"), unique=True)
+    current_bid: Mapped[int] = mapped_column(BigInteger)
+    current_bidder: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    ends_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Farm(Base):
+    __tablename__ = "farms"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), unique=True)
+    psu_lvl: Mapped[int] = mapped_column(Integer, default=1)
+    cooling_lvl: Mapped[int] = mapped_column(Integer, default=1)
+    rack_lvl: Mapped[int] = mapped_column(Integer, default=1)
+    slot1_card: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    slot2_card: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    power_used: Mapped[int] = mapped_column(Integer, default=0)
+    heat_used: Mapped[int] = mapped_column(Integer, default=0)
+    is_running: Mapped[bool] = mapped_column(Boolean, default=False)
+    fcoins_balance: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
