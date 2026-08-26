@@ -626,7 +626,7 @@ async def test_workshoplist_empty(env):
 async def test_ffarm_no_farm(env):
     await env.send("/ffarm", user_id=408, username="farm")
     joined = "\n".join(env.bot.texts())
-    assert "ферм" in joined
+    assert "столовой" in joined
 
 
 @pytest.mark.asyncio

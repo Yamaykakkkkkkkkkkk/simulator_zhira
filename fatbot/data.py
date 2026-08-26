@@ -161,3 +161,19 @@ FARM_COOLING = {1: 45, 2: 90, 3: 180}
 FARM_SLOTS = {1: 2, 2: 3, 3: 4}
 FARM_UPGRADE_COST = {1: 100_000, 2: 500_000}
 FARM_FCOIN_PER_HOUR = {1: 5, 2: 10, 3: 20}
+
+FARM_PRODUCTS = [
+    {"key": "sandwich", "name": "Бутерброд с маслом", "emoji": "🍞", "calories": 5, "price": 10_000, "slot": 1, "desc": "Простая еда, малый доход"},
+    {"key": "dumplings", "name": "Пельмени", "emoji": "🥟", "calories": 12, "price": 30_000, "slot": 1, "desc": "Сытно, средний доход"},
+    {"key": "shashlik", "name": "Шашлык", "emoji": "🍖", "calories": 30, "price": 100_000, "slot": 2, "desc": "Мясо — основа жира"},
+    {"key": "cake", "name": "Праздничный торт", "emoji": "🎂", "calories": 100, "price": 500_000, "slot": 3, "desc": "Десерт, огромные калории"},
+]
+FARM_PRODUCTS_BY_KEY = {p["key"]: p for p in FARM_PRODUCTS}
+
+FARM_LEVELS = [
+    {"lvl": 1, "name": "Домашняя кухня", "slots": 2, "efficiency": 1.0, "upgrade_cost": 100_000},
+    {"lvl": 2, "name": "Столовая", "slots": 3, "efficiency": 1.2, "upgrade_cost": 500_000},
+    {"lvl": 3, "name": "Ресторан", "slots": 4, "efficiency": 1.5, "upgrade_cost": 2_000_000},
+]
+
+FARM_CALORIE_TO_POINTS = 10

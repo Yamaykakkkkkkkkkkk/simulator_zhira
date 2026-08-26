@@ -610,3 +610,120 @@ async def create_farm(session: AsyncSession, user_id: int, cost: int):
     session.add(farm)
     await session.flush()
     return farm, None
+
+
+def farm_calories_per_hour(farm) -> int:
+    from .data import FARM_PRODUCTS_BY_KEY, FARM_LEVELS
+
+    level_data = next((l for l in FARM_LEVELS if l["lvl"] == farm.level), FARM_LEVELS[0])
+    efficiency = level_data["efficiency"]
+
+    total = 0
+    for i in range(1, level_data["slots"] + 1):
+        product_key = getattr(farm, f"slot{i}_product", None)
+        if product_key and product_key in FARM_PRODUCTS_BY_KEY:
+            total += FARM_PRODUCTS_BY_KEY[product_key]["calories"]
+
+    return int(total * efficiency)
+
+
+def farm_slots_used(farm) -> int:
+    from .data import FARM_LEVELS
+
+    level_data = next((l for l in FARM_LEVELS if l["lvl"] == farm.level), FARM_LEVELS[0])
+    used = 0
+    for i in range(1, level_data["slots"] + 1):
+        if getattr(farm, f"slot{i}_product", None):
+            used += 1
+    return used
+
+
+def farm_max_slots(farm) -> int:
+    from .data import FARM_LEVELS
+
+    level_data = next((l for l in FARM_LEVELS if l["lvl"] == farm.level), FARM_LEVELS[0])
+    return level_data["slots"]
+
+
+def farm_pending_points(farm) -> int:
+    from .data import FARM_CALORIE_TO_POINTS
+
+    if not farm.is_running or farm.total_calories <= 0:
+        return 0
+    return int(farm.total_calories * FARM_CALORIE_TO_POINTS)
+
+
+async def farm_collect(session: AsyncSession, farm) -> int:
+    from .data import FARM_CALORIE_TO_POINTS
+    from .utils import utcnow
+
+    amount = farm_pending_points(farm)
+    if amount > 0:
+        user = await session.get(User, farm.user_id)
+        if user:
+            user.points += amount
+        farm.total_calories = 0
+        farm.last_collect = utcnow()
+    await session.flush()
+    return amount
+
+
+async def place_food_in_slot(session: AsyncSession, farm, slot: int, product_key: str):
+    from .data import FARM_PRODUCTS_BY_KEY, FARM_LEVELS
+
+    product = FARM_PRODUCTS_BY_KEY.get(product_key)
+    if product is None:
+        return False, "Блюдо не найдено."
+
+    level_data = next((l for l in FARM_LEVELS if l["lvl"] == farm.level), FARM_LEVELS[0])
+    if slot < 1 or slot > level_data["slots"]:
+        return False, f"Слот {slot} недоступен (макс. {level_data['slots']})."
+
+    current = getattr(farm, f"slot{slot}_product", None)
+    if current:
+        return False, "Слот уже занят. Сначала уберите текущее блюдо."
+
+    user = await session.get(User, farm.user_id)
+    if user.points < product["price"]:
+        return False, "Недостаточно ФОчек."
+
+    user.points -= product["price"]
+    setattr(farm, f"slot{slot}_product", product_key)
+    await session.flush()
+    return True, None
+
+
+async def remove_food_from_slot(session: AsyncSession, farm, slot: int):
+    from .data import FARM_LEVELS
+
+    level_data = next((l for l in FARM_LEVELS if l["lvl"] == farm.level), FARM_LEVELS[0])
+    if slot < 1 or slot > level_data["slots"]:
+        return False, "Неверный слот."
+
+    current = getattr(farm, f"slot{slot}_product", None)
+    if not current:
+        return False, "Слот уже пустой."
+
+    setattr(farm, f"slot{slot}_product", None)
+    await session.flush()
+    return True, None
+
+
+async def upgrade_farm(session: AsyncSession, farm):
+    from .data import FARM_LEVELS
+
+    if farm.level >= 3:
+        return False, "Максимальный уровень."
+
+    next_level = next((l for l in FARM_LEVELS if l["lvl"] == farm.level + 1), None)
+    if next_level is None:
+        return False, "Максимальный уровень."
+
+    user = await session.get(User, farm.user_id)
+    if user.points < next_level["upgrade_cost"]:
+        return False, "Недостаточно ФОчек."
+
+    user.points -= next_level["upgrade_cost"]
+    farm.level = next_level["lvl"]
+    await session.flush()
+    return True, None
