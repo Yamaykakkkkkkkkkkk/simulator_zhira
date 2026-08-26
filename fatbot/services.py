@@ -6,8 +6,26 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import data
-from .models import Achievement, Accessory, MarketListing, ProfileView, Referral, User, UserCard
+from .models import Achievement, Accessory, BotSetting, MarketListing, ProfileView, Referral, User, UserCard
 from .utils import utcnow
+
+
+async def get_setting(session: AsyncSession, key: str) -> str | None:
+    row = await session.get(BotSetting, key)
+    return row.value if row else None
+
+
+async def set_setting(session: AsyncSession, key: str, value: str):
+    row = await session.get(BotSetting, key)
+    if row is None:
+        session.add(BotSetting(key=key, value=value))
+    else:
+        row.value = value
+    await session.flush()
+
+
+async def cooldown_disabled(session: AsyncSession) -> bool:
+    return (await get_setting(session, "no_cooldown")) == "1"
 
 
 async def get_or_create_user(session: AsyncSession, tg_id: int, username: str | None, full_name: str) -> User:

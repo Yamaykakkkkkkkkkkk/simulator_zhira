@@ -86,3 +86,9 @@ class Achievement(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, index=True)
     key: Mapped[str] = mapped_column(String(32))
     __table_args__ = (UniqueConstraint("user_id", "key", name="uq_user_ach"),)
+
+
+class BotSetting(Base):
+    __tablename__ = "bot_settings"
+    key: Mapped[str] = mapped_column(String(32), primary_key=True)
+    value: Mapped[str] = mapped_column(String(64), default="")

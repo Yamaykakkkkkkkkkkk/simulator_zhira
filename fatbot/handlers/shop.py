@@ -35,13 +35,21 @@ async def cmd_fshop(message: Message, session):
 @router.message(Command("finventory"))
 @router.message(lambda m: m.text and m.text.strip().lower() in ("💼 инвентарь", "инвентарь"))
 async def cmd_inventory(message: Message, session):
+    from sqlalchemy import select
+
+    from ..models import UserCard
+
     user = await services.get_or_create_user(
         session, message.from_user.id, message.from_user.username, message.from_user.full_name
     )
     keys = await services.accessory_keys(session, user.id)
+    stats = await services.collection_stats(session, user.id)
     lines = [
         f"@{user.username or user.id},",
         "Добро пожаловать в инвентарь:\n",
+        f"💠 F-Coins: {user.fcoins}",
+        "",
+        "🎒 Аксессуары:",
     ]
     if not keys:
         lines.append("(пусто)")
@@ -49,7 +57,28 @@ async def cmd_inventory(message: Message, session):
         for k in keys:
             a = data.ACCESSORY_BY_KEY[k]
             lines.append(f"{a['emoji']} {a['name']} — {a['desc']}")
-    lines.append(f"\n💠 F-Coins: {user.fcoins}")
+    lines.append("")
+    if stats["count"]:
+        lines.append(f"🐷 Ваши жиры — {stats['count']} шт. | ⚖️ {fmt(stats['weight'])} кг | 💰 {fmt(stats['value'])} ФОчек:")
+        for key in data.ORDER:
+            cnt = stats["by_rarity"].get(key, 0)
+            if cnt:
+                d = data.RARITIES[key]
+                lines.append(f"{d['emoji']} {d['name']} × {cnt}")
+        cards = (
+            await session.scalars(
+                select(UserCard).where(UserCard.user_id == user.id).order_by(UserCard.id.desc()).limit(20)
+            )
+        ).all()
+        lines.append("")
+        for c in cards:
+            d = data.RARITIES[c.rarity]
+            mark = " 🔖" if c.listed else ""
+            lines.append(f"{d['emoji']} {c.name} · {c.weight} кг{mark}")
+        if stats["count"] > len(cards):
+            lines.append(f"…и ещё {stats['count'] - len(cards)}")
+    else:
+        lines.append("🐷 Жиров пока нет — напишите «ФКарточка»!")
     await answer_media(message, "inventory", "\n".join(lines))
 
 

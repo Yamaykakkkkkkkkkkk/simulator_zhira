@@ -1,12 +1,35 @@
+from sqlalchemy import update
+
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from .. import services
-from ..config import ADMIN_IDS
+from ..config import ADMIN_IDS, OWNER_ID
 from ..models import User
 
 router = Router()
+
+
+@router.message(Command("fcooldown"))
+async def cmd_fcooldown(message: Message, session):
+    if message.from_user.id != OWNER_ID:
+        return
+    disabled = await services.cooldown_disabled(session)
+    new_state = not disabled
+    await services.set_setting(session, "no_cooldown", "1" if new_state else "0")
+    if new_state:
+        await session.execute(update(User).values(next_card_at=None))
+        await message.answer(
+            "✅ Задержка карточек глобально отключена!\n"
+            "🐷 Теперь все игроки могут выбивать жиров без ограничений.\n"
+            "Повторный вызов /fcooldown включит задержку обратно."
+        )
+    else:
+        await message.answer(
+            "⏳ Задержка карточек глобально включена обратно.\n"
+            "🐷 Стандартный кулдаун снова действует для всех игроков."
+        )
 
 
 @router.message(Command("give"))

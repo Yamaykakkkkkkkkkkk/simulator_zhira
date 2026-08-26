@@ -12,7 +12,7 @@ from ..utils import answer_media, fmt, remaining_str, utcnow
 router = Router()
 
 
-def card_text(user, card, flavor) -> str:
+def card_text(user, card, flavor, credited=True) -> str:
     d = data.RARITIES[card.rarity]
     lines = [
         f"@{user.username or user.id} Вам выпал жир!",
@@ -23,6 +23,8 @@ def card_text(user, card, flavor) -> str:
     ]
     if card.defects:
         lines.append("Дефекты: " + ", ".join(card.defects))
+    if credited:
+        lines.append(f"\n💰 На баланс зачислено {fmt(card.base_price)} ФОчек.")
     return "\n".join(lines)
 
 
@@ -41,13 +43,17 @@ async def open_card(message: Message, session):
         session, message.from_user.id, message.from_user.username, message.from_user.full_name
     )
     now = utcnow()
-    cd = await services.effective_cooldown(session, user)
-    if user.next_card_at is not None and user.next_card_at > now:
-        left = remaining_str(user.next_card_at - now)
-        await message.answer(f"@{user.username or user.id}\nВы сможете выбить карточку еще раз через {left}.")
-        return
+    no_cooldown = await services.cooldown_disabled(session)
+    if not no_cooldown:
+        cd = await services.effective_cooldown(session, user)
+        if user.next_card_at is not None and user.next_card_at > now:
+            left = remaining_str(user.next_card_at - now)
+            await message.answer(f"@{user.username or user.id}\nВы сможете выбить карточку еще раз через {left}.")
+            return
     card, flavor, ref_msg = await services.roll_card(session, user)
-    user.next_card_at = now + cd
+    if not no_cooldown:
+        user.next_card_at = now + cd
+    user.points = (user.points or 0) + card.base_price
     achievements = await services.grant_achievements(session, user)
     text = card_text(user, card, flavor)
     if ref_msg:

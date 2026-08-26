@@ -42,11 +42,11 @@ async def cmd_profile(message: Message, session):
     )
     parts = (message.text or "").split()
     target = None
-    if len(parts) >= 2:
+    if len(parts) >= 2 and (parts[1].startswith("@") or parts[1].isdigit()):
         raw = parts[1]
         if raw.startswith("@"):
             target = await services.get_by_username(session, raw)
-        elif raw.isdigit():
+        else:
             target = await session.get(User, int(raw))
         if target is None:
             await message.answer("❌ Игрок не найден.")

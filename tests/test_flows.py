@@ -474,3 +474,84 @@ async def test_avito_browse_empty_and_exchange(env):
     u = await env.db_user(131)
     assert u.fcoins == 1
     assert u.points == 500_000
+
+
+@pytest.mark.asyncio
+async def test_fcard_credits_points(env):
+    await env.send("/fcard", user_id=301, username="cred")
+    u = await env.db_user(301)
+    assert u.points > 0
+    assert any("На баланс зачислено" in t for t in env.bot.texts())
+
+
+@pytest.mark.asyncio
+async def test_profile_keyboard_button_shows_own_profile(env):
+    await env.send("/start", user_id=311, username="btnuser")
+    await env.send("👤 Профиль", user_id=311, username="btnuser")
+    joined = "\n".join(env.bot.texts())
+    assert "Профиль: @btnuser" in joined
+    assert "не найден" not in joined
+
+
+@pytest.mark.asyncio
+async def test_profile_by_username_still_works(env):
+    async with env.sm() as s:
+        s.add(User(id=321, username="target"))
+        s.add(User(id=322, username="viewer2"))
+        await s.commit()
+    await env.send("/profile @target", user_id=322, username="viewer2")
+    joined = "\n".join(env.bot.texts())
+    assert "Профиль: @target" in joined
+
+
+@pytest.mark.asyncio
+async def test_inventory_lists_cards_like_collection(env):
+    async with env.sm() as s:
+        s.add(User(id=331, username="inv"))
+        await s.commit()
+    await seed_card(env, 331, "epic", "Мраморное сало", 120, 720000)
+    await seed_card(env, 331, "common", "Пивной животик", 10, 600)
+    await env.send("/finventory", user_id=331, username="inv")
+    joined = "\n".join(env.bot.texts())
+    assert "Ваши жиры — 2 шт." in joined
+    assert "Элитный × 1" in joined
+    assert "Ширпотреб × 1" in joined
+    assert "Мраморное сало · 120 кг" in joined
+    assert "Пивной животик · 10 кг" in joined
+
+
+@pytest.mark.asyncio
+async def test_fcooldown_owner_toggle(env):
+    from fatbot.config import OWNER_ID
+
+    await env.send("/fcooldown", user_id=OWNER_ID, username="owner")
+    assert any("отключена" in t for t in env.bot.texts())
+    await env.send("/fcard", user_id=341, username="fast1")
+    await env.send("/fcard", user_id=341, username="fast1")
+    u = await env.db_user(341)
+    assert u.cards_opened == 2
+    assert u.next_card_at is None
+
+    await env.send("/fcooldown", user_id=OWNER_ID, username="owner")
+    assert any("включена" in t for t in env.bot.texts())
+    await env.send("/fcard", user_id=341, username="fast1")
+    u = await env.db_user(341)
+    assert u.cards_opened == 3
+    assert u.next_card_at is not None
+    env.bot.calls.clear()
+    await env.send("/fcard", user_id=341, username="fast1")
+    assert any("еще раз через" in t for t in env.bot.texts())
+    assert (await env.db_user(341)).cards_opened == 3
+
+
+@pytest.mark.asyncio
+async def test_fcooldown_non_owner_ignored(env):
+    await env.send("/fcooldown", user_id=999, username="random")
+    assert len(env.bot.calls) == 0
+    from sqlalchemy import select
+
+    from fatbot.models import BotSetting
+
+    async with env.sm() as s:
+        row = (await s.scalars(select(BotSetting).where(BotSetting.key == "no_cooldown"))).first()
+    assert row is None or row.value != "1"
