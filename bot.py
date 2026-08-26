@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 
 from aiogram import Bot, Dispatcher
@@ -8,6 +9,7 @@ from aiogram.exceptions import TelegramUnauthorizedError
 from fatbot.config import BOT_TOKEN, DATABASE_URL
 from fatbot.db import DbSessionMiddleware, init_db, make_engine, make_sessionmaker
 from fatbot.handlers import build_router
+from fatbot.web import start_web
 
 
 async def check():
@@ -37,6 +39,9 @@ async def run():
     dp = Dispatcher()
     dp.update.outer_middleware(DbSessionMiddleware(sm))
     dp.include_router(build_router())
+    port = int(os.getenv("PORT", "8080"))
+    start_web(port)
+    logging.info(f"HTTP-сервер запущен на 0.0.0.0:{port}")
     bot = Bot(BOT_TOKEN)
     try:
         try:
