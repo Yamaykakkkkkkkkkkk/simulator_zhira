@@ -17,18 +17,34 @@ async def init_db(engine):
         await conn.run_sync(models.Base.metadata.create_all)
 
 
+_PG_MIGRATIONS = [
+    'ALTER TABLE farms ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1',
+    'ALTER TABLE farms ADD COLUMN IF NOT EXISTS slot1_product VARCHAR(32)',
+    'ALTER TABLE farms ADD COLUMN IF NOT EXISTS slot2_product VARCHAR(32)',
+    'ALTER TABLE farms ADD COLUMN IF NOT EXISTS slot3_product VARCHAR(32)',
+    'ALTER TABLE farms ADD COLUMN IF NOT EXISTS slot4_product VARCHAR(32)',
+]
+
+_SQLITE_MIGRATIONS = [
+    'ALTER TABLE farms ADD COLUMN level INTEGER DEFAULT 1',
+    'ALTER TABLE farms ADD COLUMN slot1_product VARCHAR(32)',
+    'ALTER TABLE farms ADD COLUMN slot2_product VARCHAR(32)',
+    'ALTER TABLE farms ADD COLUMN slot3_product VARCHAR(32)',
+    'ALTER TABLE farms ADD COLUMN slot4_product VARCHAR(32)',
+]
+
+
 async def migrate_db(engine):
     async with engine.begin() as conn:
         if "postgresql" in str(engine.url):
-            await conn.execute(text("""
-                ALTER TABLE farms
-                ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1
-            """))
+            for stmt in _PG_MIGRATIONS:
+                await conn.execute(text(stmt))
         elif "sqlite" in str(engine.url):
-            try:
-                await conn.execute(text("ALTER TABLE farms ADD COLUMN level INTEGER DEFAULT 1"))
-            except Exception:
-                pass
+            for stmt in _SQLITE_MIGRATIONS:
+                try:
+                    await conn.execute(text(stmt))
+                except Exception:
+                    pass
 
 
 def make_sessionmaker(engine):
