@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramUnauthorizedError
 
 from fatbot.config import BOT_TOKEN, DATABASE_URL
-from fatbot.db import DbSessionMiddleware, init_db, make_engine, make_sessionmaker
+from fatbot.db import DbSessionMiddleware, init_db, make_engine, make_sessionmaker, migrate_db
 from fatbot.handlers import build_router
 from fatbot.web import start_web
 
@@ -16,6 +16,7 @@ async def check():
     engine = make_engine(DATABASE_URL)
     try:
         await init_db(engine)
+        await migrate_db(engine)
         print("✅ База данных инициализирована:", DATABASE_URL.split("@")[-1])
         if not BOT_TOKEN:
             print("⚠️ BOT_TOKEN не задан (для запуска укажите его в .env)")
@@ -35,6 +36,7 @@ async def run():
     )
     engine = make_engine(DATABASE_URL)
     await init_db(engine)
+    await migrate_db(engine)
     sm = make_sessionmaker(engine)
     dp = Dispatcher()
     dp.update.outer_middleware(DbSessionMiddleware(sm))

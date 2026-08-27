@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from . import models
@@ -14,6 +15,20 @@ def make_engine(url: str):
 async def init_db(engine):
     async with engine.begin() as conn:
         await conn.run_sync(models.Base.metadata.create_all)
+
+
+async def migrate_db(engine):
+    async with engine.begin() as conn:
+        if "postgresql" in str(engine.url):
+            await conn.execute(text("""
+                ALTER TABLE farms
+                ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1
+            """))
+        elif "sqlite" in str(engine.url):
+            try:
+                await conn.execute(text("ALTER TABLE farms ADD COLUMN level INTEGER DEFAULT 1"))
+            except Exception:
+                pass
 
 
 def make_sessionmaker(engine):
