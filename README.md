@@ -52,3 +52,10 @@ python bot.py --check     # проверка конфига и БД без за�
 pip install -r requirements.txt
 pytest -q
 ```
+
+## License
+
+Copyright (C) 2026 Linuin
+
+This project is licensed under the GNU General Public License v3.0.
+See the [LICENSE](LICENSE) file for details.
