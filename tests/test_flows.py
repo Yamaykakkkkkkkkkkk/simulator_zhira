@@ -477,6 +477,16 @@ async def test_avito_browse_empty_and_exchange(env):
 
 
 @pytest.mark.asyncio
+async def test_avito_menu_callback_no_crash(env):
+    async with env.sm() as s:
+        s.add(User(id=361, username="menuuser"))
+        await s.commit()
+    await env.tap("avito_menu", user_id=361, username="menuuser")
+    joined = "\n".join(env.bot.texts())
+    assert "ЖироАвито" in joined
+
+
+@pytest.mark.asyncio
 async def test_fcard_credits_points(env):
     await env.send("/fcard", user_id=301, username="cred")
     u = await env.db_user(301)

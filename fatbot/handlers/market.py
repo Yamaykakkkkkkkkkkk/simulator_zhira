@@ -65,7 +65,7 @@ async def send_market_page(message_or_cb, session, page: int):
         ids.append(l.id)
     kb = market_nav_kb(page, pages, ids)
     text = "\n".join(blocks)
-    if hasattr(message_or_cb, "answer"):
+    if isinstance(message_or_cb, Message):
         await answer_media(message_or_cb, "avito", text[:4000], kb)
     else:
         await edit_media(message_or_cb, "avito", text[:4000], kb)
