@@ -7,7 +7,7 @@ from aiogram.types import Message
 from .. import data, services
 from ..filters import TextEquals
 from ..keyboards import main_kb
-from ..utils import answer_media, fmt, remaining_str, utcnow
+from ..utils import answer_media, card_image, fmt, remaining_str, utcnow
 
 router = Router()
 
@@ -60,4 +60,7 @@ async def open_card(message: Message, session):
         text += "\n\n" + ref_msg
     if achievements:
         text += "\n\n🏆 Новые достижения:\n" + "\n".join(achievements)
-    await answer_media(message, "card", text)
+    if len(text) <= 1000:
+        await message.answer_photo(card_image(card), caption=text)
+    else:
+        await message.answer(text)
