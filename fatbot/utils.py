@@ -21,13 +21,13 @@ CARD_GRADIENT = {
 }
 
 
-def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    for name in ("arialbd.ttf", "arial.ttf", "segoeuib.ttf", "segoeui.ttf"):
-        try:
-            return ImageFont.truetype(name, size)
-        except Exception:
-            continue
-    return ImageFont.load_default(size)
+DEJAVU = ASSETS / "DejaVuSans.ttf"
+DEJAVU_BOLD = ASSETS / "DejaVuSans-Bold.ttf"
+
+
+def _font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    path = DEJAVU_BOLD if bold else DEJAVU
+    return ImageFont.truetype(str(path), size)
 
 
 def card_image(card) -> FSInputFile:
@@ -50,7 +50,7 @@ def card_image(card) -> FSInputFile:
 
     price_str = f"{card.base_price:,}"
 
-    title_font = _font(56)
+    title_font = _font(52, bold=True)
     emoji_font = _font(96)
     sub_font = _font(34)
     price_font = _font(30)
