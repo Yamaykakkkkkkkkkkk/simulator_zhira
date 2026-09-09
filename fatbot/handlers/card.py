@@ -60,7 +60,7 @@ async def open_card(message: Message, session):
         text += "\n\n" + ref_msg
     if achievements:
         text += "\n\n🏆 Новые достижения:\n" + "\n".join(achievements)
-    if len(text) <= 1000:
-        await message.answer_photo(card_image(card), caption=text)
+    if len(text) <= 1024:
+        await message.answer_photo(card_image(card), caption=text, parse_mode="HTML")
     else:
-        await message.answer(text)
+        await message.answer(text, parse_mode="HTML")

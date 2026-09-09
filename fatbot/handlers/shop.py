@@ -21,14 +21,15 @@ async def cmd_fshop(message: Message, session):
     )
     owned = await services.accessory_keys(session, user.id)
     lines = [
-        "Добро пожаловать в ФШоп! 👜",
+        "<b>Добро пожаловать в ФШоп! 👜</b>",
         "Здесь вы можете приобрести аксессуары за F-Coins.",
         "",
-        f"💠 Ваши F-Coins: {user.fcoins}",
+        f"💠 Ваши F-Coins: <b>{user.fcoins}</b>",
+        "",
     ]
     for a in data.ACCESSORIES:
         mark = " ✅" if a["key"] in owned else ""
-        lines.append(f"{a['emoji']} {a['name']} — {a['price']} FC{mark}\n   <i>{a['desc']}</i>")
+        lines.append(f"{a['emoji']} <b>{a['name']}</b> — {a['price']} FC{mark}\n└ <i>{a['desc']}</i>\n")
     await answer_media(message, "shop", "\n".join(lines), shop_kb(owned))
 
 

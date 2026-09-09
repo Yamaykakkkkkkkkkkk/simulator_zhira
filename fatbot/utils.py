@@ -5,7 +5,14 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from textwrap import wrap
 
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InputFile, FSInputFile, Message
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InputFile,
+    FSInputFile,
+    InputMediaPhoto,
+    Message,
+)
 from PIL import Image, ImageDraw, ImageFont
 
 from .config import ROOT
@@ -51,16 +58,22 @@ def card_image(card) -> FSInputFile:
     price_str = f"{card.base_price:,}"
 
     title_font = _font(52, bold=True)
-    emoji_font = _font(96)
+    # NOTE: DejaVuSans has no color-emoji glyphs, so drawing rarity emoji
+    # (🥴🏠💎👑🔥) with PIL produced tofu squares ("□"). Use DejaVu-safe
+    # stars instead — they render on any platform.
+    stars_font = _font(64, bold=True)
     sub_font = _font(34)
     price_font = _font(30)
+
+    RARITY_STARS = {"common": 1, "rare": 2, "epic": 3, "legendary": 4, "mythic": 5}
+    stars = "★" * RARITY_STARS.get(card.rarity, 1)
 
     def text_w(text, font):
         l, t, r, b = dr.textbbox((0, 0), text, font=font)
         return r - l
 
-    emoji_w = text_w(d["emoji"], emoji_font)
-    dr.text(((w - emoji_w) / 2, 40), d["emoji"], fill=(255, 255, 255), font=emoji_font)
+    stars_w = text_w(stars, stars_font)
+    dr.text(((w - stars_w) / 2, 40), stars, fill=(255, 220, 120), font=stars_font)
 
     title = card.name
     for i, line in enumerate(wrap(title, 18)):
@@ -112,27 +125,41 @@ def photo(key: str) -> InputFile | None:
 
 
 async def answer_media(message: Message, key: str, text: str, kb: InlineKeyboardMarkup | None = None):
-    ph = photo(key) if len(text) <= 1000 else None
+    ph = photo(key) if key and len(text) <= 1024 else None
     if ph:
-        return await message.answer_photo(ph, caption=text, reply_markup=kb)
-    return await message.answer(text, reply_markup=kb)
+        return await message.answer_photo(ph, caption=text, reply_markup=kb, parse_mode="HTML")
+    return await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
 
 async def edit_media(cb: CallbackQuery, key: str, text: str, kb: InlineKeyboardMarkup | None = None):
     if cb.message is None:
         return
-    ph = photo(key) if len(text) <= 1000 else None
+    ph = photo(key) if key and len(text) <= 1024 else None
+    has_photo = bool(getattr(cb.message, "photo", None))
     try:
-        if ph and getattr(cb.message, "photo", None):
-            await cb.message.edit_media(ph, caption=text)
-            if kb:
-                await cb.message.edit_reply_markup(reply_markup=kb)
-        elif hasattr(cb.message, "edit_text"):
-            await cb.message.edit_text(text, reply_markup=kb)
+        if ph and has_photo:
+            await cb.message.edit_media(
+                media=InputMediaPhoto(media=ph, caption=text, parse_mode="HTML"),
+                reply_markup=kb,
+            )
+        elif not ph and not has_photo:
+            await cb.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         else:
-            await cb.message.answer(text, reply_markup=kb)
+            # Telegram cannot morph a photo message into a text one (or back)
+            # via edit — replace it instead.
+            try:
+                await cb.message.delete()
+            except Exception:
+                pass
+            if ph:
+                await cb.message.answer_photo(ph, caption=text, reply_markup=kb, parse_mode="HTML")
+            else:
+                await cb.message.answer(text, reply_markup=kb, parse_mode="HTML")
     except Exception:
         try:
-            await cb.message.answer(text, reply_markup=kb)
+            if ph:
+                await cb.message.answer_photo(ph, caption=text, reply_markup=kb, parse_mode="HTML")
+            else:
+                await cb.message.answer(text, reply_markup=kb, parse_mode="HTML")
         except Exception:
             pass
