@@ -692,3 +692,35 @@ async def test_fexchange_sell(env):
     u = await env.db_user(414)
     assert u.fcoins == 0
     assert u.points == 950_000
+
+
+@pytest.mark.asyncio
+async def test_hide_and_menu_keyboard(env):
+    from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
+
+    await env.send("❌ Скрыть", user_id=501, username="hider")
+    msg = last_call_of(env, SendMessage)
+    assert isinstance(msg.reply_markup, ReplyKeyboardRemove)
+    assert "скрыта" in (msg.text or "")
+
+    env.bot.calls.clear()
+    await env.send("/menu", user_id=501, username="hider")
+    msg = last_call_of(env, SendMessage)
+    assert isinstance(msg.reply_markup, ReplyKeyboardMarkup)
+    flat = [b.text for row in msg.reply_markup.keyboard for b in row]
+    assert "❌ Скрыть" in flat
+
+
+@pytest.mark.asyncio
+async def test_close_button_deletes_message(env):
+    from aiogram.methods import DeleteMessage
+
+    await env.send("/fshop", user_id=502, username="closer")
+    photo = last_call_of(env, SendPhoto)
+    assert photo is not None and photo.reply_markup is not None
+    assert photo.reply_markup.inline_keyboard[-1][0].text == "❌ Закрыть"
+    assert photo.reply_markup.inline_keyboard[-1][0].callback_data == "close"
+
+    env.bot.calls.clear()
+    await env.tap("close", user_id=502)
+    assert any(isinstance(c, DeleteMessage) for c in env.bot.calls)

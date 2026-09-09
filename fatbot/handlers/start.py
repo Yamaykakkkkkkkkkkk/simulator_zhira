@@ -61,6 +61,7 @@ async def cmd_help(message: Message):
         "/fexchange — биржа F-Coin\n"
         "/daily — ежедневный бонус\n"
         "/ref — реферальная программа\n"
+        "/menu — вернуть кнопки клавиатуры\n"
         f"\n🔗 t.me/{BOT_USERNAME}"
     )
     await message.answer(text)

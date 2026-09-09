@@ -13,14 +13,19 @@ def main_kb() -> ReplyKeyboardMarkup:
         [KeyboardButton(text="🤝 Рефералы"), KeyboardButton(text="📦 Контейнеры")],
         [KeyboardButton(text="🏭 Ферма"), KeyboardButton(text="📜 Квесты")],
         [KeyboardButton(text="🛒 Магазин жиров"), KeyboardButton(text="⚙️ Настройки")],
+        [KeyboardButton(text="❌ Скрыть")],
     ]
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
 
+def close_row() -> list[InlineKeyboardButton]:
+    return [InlineKeyboardButton(text="❌ Закрыть", callback_data="close")]
+
+
 def ikb(rows: list[list[tuple[str, str]]]) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text=t, callback_data=d) for t, d in row] for row in rows]
-    )
+    kb = [[InlineKeyboardButton(text=t, callback_data=d) for t, d in row] for row in rows]
+    kb.append(close_row())
+    return InlineKeyboardMarkup(inline_keyboard=kb)
 
 
 def rarities_kb(prefix: str, counts: dict[str, int], back_cb: str | None = None) -> InlineKeyboardMarkup:
@@ -41,6 +46,7 @@ def rarities_kb(prefix: str, counts: dict[str, int], back_cb: str | None = None)
         rows.append(row)
     if back_cb:
         rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data=back_cb)])
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -68,6 +74,7 @@ def cards_page_kb(
     if nav:
         rows.append(nav)
     rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data=back_cb)])
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -77,6 +84,7 @@ def card_manage_kb(card_id: int, listed: bool) -> InlineKeyboardMarkup:
     if not listed:
         rows.append([InlineKeyboardButton(text="📢 На Авито", callback_data=f"avsel:{card_id}")])
     rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="coll_root")])
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -84,6 +92,7 @@ def confirm_kb(yes_cb: str, no_cb: str | None = None) -> InlineKeyboardMarkup:
     rows = [[InlineKeyboardButton(text="✅ Да", callback_data=yes_cb)]]
     if no_cb:
         rows[0].append(InlineKeyboardButton(text="❌ Нет", callback_data=no_cb))
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -106,6 +115,7 @@ def market_nav_kb(page: int, pages: int, listing_ids: list[int]) -> InlineKeyboa
             InlineKeyboardButton(text="📦 Мои объявления", callback_data="avimy"),
         ]
     )
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -131,6 +141,7 @@ def bets_kb(prefix: str) -> InlineKeyboardMarkup:
         rows.append(row)
     rows.append([InlineKeyboardButton(text="🍀 All-in", callback_data=f"{prefix}:all")])
     rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="casino_menu")])
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -142,6 +153,7 @@ def shop_kb(owned: set[str]) -> InlineKeyboardMarkup:
         rows.append([InlineKeyboardButton(text=label, callback_data=cb)])
     rows.append([InlineKeyboardButton(text="🔁 Обменять 1,000,000 ФОчек → 1 FC", callback_data="accex")])
     rows.append([InlineKeyboardButton(text="◀️ В меню", callback_data="noop")])
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -157,6 +169,7 @@ def upgrades_kb(user) -> InlineKeyboardMarkup:
             cb = f"ubuy:{u['key']}"
         rows.append([InlineKeyboardButton(text=label, callback_data=cb)])
     rows.append([InlineKeyboardButton(text="◀️ В меню", callback_data="noop")])
+    rows.append(close_row())
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
