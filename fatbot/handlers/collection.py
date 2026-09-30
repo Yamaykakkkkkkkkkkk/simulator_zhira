@@ -36,7 +36,6 @@ async def cmd_myfats(message: Message, session):
     if stats["count"] == 0:
         await message.answer(f"@{user.username or user.id}, ваша коллекция пуста. Напишите «ФКарточка», чтобы выбить первого жира!")
         return
-    # AGENT1 FATS: бонус за полные сеты коллекций
     set_info = await services.user_collection_set_bonus(session, user.id)
     set_lines = ""
     if set_info["completed"]:

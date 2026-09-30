@@ -246,7 +246,6 @@ async def cb_trade_finish(cb: CallbackQuery, session):
         return
     a_card.user_id, b_card.user_id = cb.from_user.id, init_id
     TRADES.pop(init_id, None)
-    # AGENT3 QUESTS: обмен засчитываем обоим
     try:
         for _uid in (cb.from_user.id, init_id):
             await services.update_quest_progress(session, _uid, "trade1", 1)

@@ -9,7 +9,6 @@ from ..utils import answer_media, edit_media, fmt
 router = Router()
 
 
-# AGENT2 UPGRADES: текущий эффект ветки для витрины
 def upgrade_effect_text(key: str, lvl: int) -> str:
     if key == "luck":
         return f"сейчас: +{lvl}% к удаче"

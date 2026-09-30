@@ -6,7 +6,7 @@ RARITIES = {
     "epic": {"name": "Элитный", "emoji": "💎", "min": 90, "max": 199, "ppk": 6000, "chance": 13},
     "legendary": {"name": "Ресторанный", "emoji": "👑", "min": 220, "max": 480, "ppk": 60000, "chance": 5.5},
     "mythic": {"name": "Легендарный", "emoji": "🔥", "min": 500, "max": 1500, "ppk": 600000, "chance": 1.0},
-    # AGENT1 FATS: новые топ-редкости выше mythic (суммарно ~1%, общий шанс ~100)
+    # топ-редкости выше mythic, суммарно ~1%
     "divine": {"name": "Божественный", "emoji": "👼", "min": 1600, "max": 4000, "ppk": 2_000_000, "chance": 0.6},
     "cosmic": {"name": "Космический", "emoji": "🌌", "min": 4200, "max": 9000, "ppk": 8_000_000, "chance": 0.25},
     "void": {"name": "Бездонный", "emoji": "🕳️", "min": 9500, "max": 20000, "ppk": 30_000_000, "chance": 0.1},
@@ -33,7 +33,6 @@ NAMES = {
         "Кефирный животик",
         "Сосисочный ряд",
         "Пончиковый обод",
-        # AGENT1 FATS: новые имена common
         "Борщовый спасательный круг",
         "Пельменный сугроб",
         "Сальный бублик",
@@ -70,7 +69,6 @@ NAMES = {
         "Компотный океан",
         "Холодильник на ножках",
         "Тёщин стратегический запас",
-        # AGENT1 FATS: новые имена rare
         "Пельменный гарнизон",
         "Борщовый котёл",
         "Сальный редут",
@@ -103,7 +101,6 @@ NAMES = {
         "Бургундский холм",
         "Омарный трон",
         "Фуа-гра Взрывная",
-        # AGENT1 FATS: новые имена epic
         "Борщевой дредноут",
         "Пельменный левиафан",
         "Сальный континент",
@@ -134,7 +131,6 @@ NAMES = {
         "Шаурма Бесконечности",
         "Плов Великий",
         "Холодец Тысячелетия",
-        # AGENT1 FATS: новые имена legendary
         "Борщ Бессмертный",
         "Сало Тысячи Холодильников",
         "Пельмень Судьбы",
@@ -161,7 +157,6 @@ NAMES = {
         "Жирнозавр Рекс",
         "Сингулярность сала",
         "Галактический Пончик",
-        # AGENT1 FATS: новые имена mythic
         "Пельмень Первородный",
         "Борщ Хаоса",
         "Сало Вечной Мерзлоты",
@@ -177,7 +172,6 @@ NAMES = {
         "Вареник Пророчества",
         "Сальный Феникс",
     ],
-    # AGENT1 FATS: имена новых редкостей
     "divine": [
         "Пельмень Небесный",
         "Борщ Благословенный",
@@ -246,7 +240,6 @@ DEFECTS = [
     "подозрительный блеск",
     "хрустит при ходьбе",
     "магнитит ложки",
-    # AGENT1 FATS: новые дефекты
     "пахнет борщом",
     "прилипают пельмени",
     "скрипит как холодец",
@@ -265,7 +258,6 @@ FLAVORS_BAD = [
     "Курьер несколько раз уронил коробку с жиром.",
     "Жир всю дорогу слушал шансон и теперь немного грустный.",
     "Курьер вёз жир на самокате — слегка растрясло.",
-    # AGENT1 FATS: новые плохие вкусы
     "Жир застрял в дверях подъезда — пришлось толкать.",
     "По дороге на жир сел голубь и отказался уходить.",
     "Курьер перепутал жир с подушкой и вздремнул на нём.",
@@ -277,7 +269,6 @@ FLAVORS_GOOD = [
     "Курьер аккуратно донёс пузо двумя руками.",
     "Жир прибыл с иголочки — хоть сейчас на выставку!",
     "Курьер нёс жир как хрустальную вазу.",
-    # AGENT1 FATS: новые хорошие вкусы
     "Жир ехал в лимузине с кондиционером и оркестром.",
     "Курьер поклонился жиру и нёс его на бархатной подушке.",
     "Жир прибыл с медалью «За идеальную округлость».",
@@ -285,7 +276,6 @@ FLAVORS_GOOD = [
     "Жир доставили под фанфары — соседи аплодировали.",
 ]
 
-# AGENT1 FATS: шансы/комиссии апгрейда для новых переходов
 UPGRADE_CHANCE = {"common": 0.45, "rare": 0.30, "epic": 0.18, "legendary": 0.10,
                    "mythic": 0.07, "divine": 0.05, "cosmic": 0.03, "void": 0.02}
 UPGRADE_FEE = {"common": 5_000, "rare": 50_000, "epic": 500_000, "legendary": 5_000_000,
@@ -298,7 +288,6 @@ ACCESSORIES = [
     {"key": "fork", "name": "Вилка фуа-гра", "emoji": "🥂", "price": 10, "desc": "+2% к удаче"},
     {"key": "scale", "name": "Инерционные весы", "emoji": "⚖️", "price": 15, "desc": "+3% к продаже жира"},
     {"key": "clover", "name": "Клевер удачи", "emoji": "🍀", "price": 20, "desc": "+1% к шансу победы в казино"},
-    # AGENT2 UPGRADES: новые аксессуары 25-100 FC
     {"key": "magnet", "name": "Жирный магнит", "emoji": "🧲", "price": 25, "desc": "+2% к шансу shiny-жира"},
     {"key": "trophy", "name": "Кубок толстяка", "emoji": "🏆", "price": 30, "desc": "+2% к удаче"},
     {"key": "apron", "name": "Фартук повара", "emoji": "🥼", "price": 35, "desc": "+5% к доходу фермы"},
@@ -315,7 +304,6 @@ UPGRADES = [
     {"key": "speed", "name": "Метаболизм", "emoji": "⚡", "desc": "−3 мин к перезарядке карточки"},
     {"key": "trader", "name": "Торговец", "emoji": "💰", "desc": "+1% к цене продажи жира"},
     {"key": "farmer", "name": "Агроном", "emoji": "🏭", "desc": "+5% к доходу мастерской"},
-    # AGENT2 UPGRADES: новые ветки прокачки
     {"key": "collector", "name": "Коллекционер", "emoji": "🎒", "desc": "+1% к шансу shiny-жира"},
     {"key": "auctioneer", "name": "Аукционист", "emoji": "🔨", "desc": "−1% комиссии Авито за уровень"},
     {"key": "gambler", "name": "Лудоман", "emoji": "🎰", "desc": "+0.5% к шансу победы в казино"},
@@ -323,12 +311,10 @@ UPGRADES = [
     {"key": "keeper", "name": "Хранитель", "emoji": "🛡️", "desc": "+1% к спасению жира при неудачном апгрейде"},
 ]
 UPGRADE_KEYS = [u["key"] for u in UPGRADES]
-# AGENT2 UPGRADES: было 10; стоимость lvl>10 прогрессивнее (x1.5)
 UPGRADE_MAX_LVL = 20
 
 
 def _upgrade_cost_progressive(lvl: int) -> int:
-    # AGENT2 UPGRADES: прогрессивная стоимость для высоких уровней
     base = 50_000 * (2 ** lvl)
     if lvl >= 10:
         base = int(base * 1.5)
@@ -338,11 +324,9 @@ def _upgrade_cost_progressive(lvl: int) -> int:
 UPGRADE_COST = _upgrade_cost_progressive
 
 WORKSHOP_CREATE_COST = 2_500_000
-# AGENT2 UPGRADES: было 5
 WORKSHOP_MAX_LVL = 10
 WORKSHOP_BASE_HOUR = 8_000
 WORKSHOP_UPG_COST = lambda lvl: 1_000_000 * (2 ** (lvl - 1))
-# AGENT2 UPGRADES: названия уровней мастерской
 WORKSHOP_TIERS = [
     "Сарай с салом",
     "Коптильня",
@@ -359,7 +343,7 @@ WORKSHOP_TIERS = [
 MARKET_FEE = 0.05
 
 STATUS_TIERS = [
-    # AGENT1 FATS: топ-тиры под новые веса (пороги выше 99999 чтобы не ломать старые тесты)
+    # пороги выше 99999, чтобы не ломать старые тесты
     (1_000_000, "Абсолютная сингулярность"),
     (300_000, "Повелитель жира"),
     (100_000, "Владыка чрева"),
@@ -379,7 +363,6 @@ ACHIEVEMENTS = [
     ("seller", "🤝 Торговец"),
     ("gambler", "🎰 Игроман"),
     ("star", "👁 Звезда"),
-    # AGENT3 QUESTS: расширение до 25
     ("fifty_cards", "🃏 Полсотни жиров"),
     ("hundred_cards", "💯 Сотня жиров"),
     ("ton_weight", "🏋️ Тонна сала"),
@@ -408,7 +391,6 @@ DAILY_QUESTS = [
     {"key": "buy2", "desc": "Купить 2 жира в магазине", "target": 2, "reward": 7_000, "category": "fatshop"},
     {"key": "casino1", "desc": "Сыграть в казино 1 раз", "target": 1, "reward": 7_500, "category": "casino"},
     {"key": "open5", "desc": "Открыть 5 карточек", "target": 5, "reward": 8_000, "category": "fcard"},
-    # AGENT3 QUESTS: расширение daily 3 -> 12
     {"key": "sell3", "desc": "Продать 3 жира", "target": 3, "reward": 9_000, "category": "market"},
     {"key": "casino_win1", "desc": "Выиграть в казино 1 раз", "target": 1, "reward": 10_000, "category": "casino"},
     {"key": "workshop1", "desc": "Забрать доход мастерской 1 раз", "target": 1, "reward": 9_000, "category": "workshop"},
@@ -424,7 +406,6 @@ WEEKLY_QUESTS = [
     {"key": "workshop_collect", "desc": "Собрать 500,000 ФОчек с мастерской", "target": 500_000, "reward": 150_000, "category": "workshop"},
     {"key": "buy20", "desc": "Купить 20 жиров в магазине", "target": 20, "reward": 120_000, "category": "fatshop"},
     {"key": "avito_sell", "desc": "Продать жиров на Авито на 1,000,000 ФОчек", "target": 1_000_000, "reward": 200_000, "category": "market"},
-    # AGENT3 QUESTS: расширение weekly 3 -> 10
     {"key": "open50", "desc": "Открыть 50 карточек", "target": 50, "reward": 300_000, "category": "fcard"},
     {"key": "upgrade5", "desc": "Улучшить жир 5 раз", "target": 5, "reward": 350_000, "category": "upgrade"},
     {"key": "earn5m", "desc": "Заработать 5,000,000 ФОчек (продажи + мастерская)", "target": 5_000_000, "reward": 400_000, "reward_fcoins": 2, "category": "market"},
@@ -449,14 +430,13 @@ FATSHOP_PRICES = {
     "epic": 150_000,
     "legendary": 1_500_000,
     "mythic": 15_000_000,
-    # AGENT1 FATS: цены новых редкостей в магазине
     "divine": 60_000_000,
     "cosmic": 250_000_000,
     "void": 1_000_000_000,
     "absolute": 4_000_000_000,
 }
 
-# AGENT1 FATS: сеты коллекций — списки имён + бонус за полный сет (в ФОчках)
+# список имён сета + бонус за полный сет
 COLLECTION_SETS = [
     {
         "key": "breakfast",
@@ -484,7 +464,7 @@ COLLECTION_SETS = [
     },
 ]
 
-# AGENT1 FATS: шансы/множители блестящих вариантов (кодируются суффиксом в name, без новых колонок БД)
+# варианты кодируются суффиксом в name, без новых колонок БД
 SHINY_SUFFIX = "✨ Блестящий"
 SHINY_CHANCE = 0.05
 SHINY_PRICE_MULT = 2.0
@@ -504,7 +484,6 @@ FARM_PRODUCTS = [
     {"key": "dumplings", "name": "Пельмени", "emoji": "🥟", "calories": 12, "price": 30_000, "slot": 1, "desc": "Сытно, средний доход"},
     {"key": "shashlik", "name": "Шашлык", "emoji": "🍖", "calories": 30, "price": 100_000, "slot": 2, "desc": "Мясо — основа жира"},
     {"key": "cake", "name": "Праздничный торт", "emoji": "🎂", "calories": 100, "price": 500_000, "slot": 3, "desc": "Десерт, огромные калории"},
-    # AGENT2 UPGRADES: новые блюда
     {"key": "burger", "name": "Бургер жирный", "emoji": "🍔", "calories": 40, "price": 150_000, "slot": 1, "desc": "Быстро и калорийно"},
     {"key": "sushi", "name": "Суши с салом", "emoji": "🍣", "calories": 55, "price": 300_000, "slot": 1, "desc": "Фьюжн-кухня"},
     {"key": "pizza", "name": "Пицца пепперони", "emoji": "🍕", "calories": 75, "price": 600_000, "slot": 2, "desc": "Сыр тянется — жир растёт"},
@@ -518,14 +497,12 @@ FARM_LEVELS = [
     {"lvl": 1, "name": "Домашняя кухня", "slots": 2, "efficiency": 1.0, "upgrade_cost": 100_000},
     {"lvl": 2, "name": "Столовая", "slots": 3, "efficiency": 1.2, "upgrade_cost": 500_000},
     {"lvl": 3, "name": "Ресторан", "slots": 4, "efficiency": 1.5, "upgrade_cost": 2_000_000},
-    # AGENT2 UPGRADES: новые уровни фермы
     {"lvl": 4, "name": "Фабрика вкуса", "slots": 5, "efficiency": 1.8, "upgrade_cost": 5_000_000},
     {"lvl": 5, "name": "Империя жира", "slots": 6, "efficiency": 2.2, "upgrade_cost": 15_000_000},
 ]
 
 FARM_CALORIE_TO_POINTS = 10
 
-# AGENT3 QUESTS: сюжетная цепочка 18 шагов (от первой карточки до mythic+ и 10M)
 STORY_QUESTS = [
     {"key": "story_01", "desc": "Открой первую карточку", "target": 1, "reward": 5_000, "reward_fcoins": 0, "category": "fcard"},
     {"key": "story_02", "desc": "Продай 1 жир", "target": 1, "reward": 8_000, "reward_fcoins": 0, "category": "market"},
@@ -547,7 +524,7 @@ STORY_QUESTS = [
     {"key": "story_18", "desc": "Собери mythic и заработай 10,000,000 ФОчек", "target": 10_000_000, "reward": 500_000, "reward_fcoins": 3, "category": "market"},
 ]
 
-# AGENT3 QUESTS: уровни игрока 1-50 (XP = cards_opened*10 + upgrades*50 + sales*20 + casino_wins*30)
+# XP = cards_opened*10 + upgrades*50 + sales*20 + casino_wins*30
 _PLAYER_TITLES = [
     "Новичок пуза", "Любитель бекона", "Дегустатор сала", "Собиратель крошек",
     "Хранитель холодильника", "Пухлый ученик", "Жирный подмастерье", "Мастер перекуса",
@@ -568,7 +545,7 @@ PLAYER_LEVELS = [
     for i in range(50)
 ]
 
-# AGENT3 QUESTS: сезонное событие (простой флаг по дате, бонус x2 к daily раз в сезон)
+# флаг по дате: бонус x2 к ежедневным квестам раз за сезон
 SEASON_EVENT = {
     "name": "❄️ Сезон Нажора",
     "start": "2026-12-01",
@@ -578,7 +555,7 @@ SEASON_EVENT = {
     "desc": "Зимний сезон: двойной бонус к ежедневке! Используй /season чтобы забрать x2-награду раз за сезон.",
 }
 
-# AGENT2 UPGRADES: престиж (rebirth) — сброс прогресса за вечный бонус к доходу
+# престиж (rebirth) — сброс прогресса за вечный бонус к доходу
 PRESTIGE_POINTS_REQ = 100_000_000
 PRESTIGE_CARDS_REQ = 100
 PRESTIGE_INCOME_PER_LVL = 0.10

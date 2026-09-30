@@ -27,7 +27,7 @@ async def cmd_upgrade(message: Message, session):
         session, message.from_user.id, message.from_user.username, message.from_user.full_name
     )
     stats = await services.collection_stats(session, user.id)
-    # AGENT1 FATS: максимальной считается последняя редкость ORDER (раньше хардкод "mythic")
+    # максимальной считается последняя редкость ORDER
     upgradable = {k: v for k, v in stats["by_rarity"].items() if k != data.ORDER[-1]}
     if not upgradable:
         await message.answer("У вас нет жиров для улучшения.")
@@ -95,7 +95,6 @@ async def cb_upgrade_confirm(cb: CallbackQuery, session):
     if card is None or card.user_id != cb.from_user.id:
         await cb.answer("Жир не найден.", show_alert=True)
         return
-    # AGENT1 FATS: блокируем апгрейд только топ-редкости ORDER[-1]
     if card.rarity == data.ORDER[-1]:
         await cb.answer("Жир максимальной редкости улучшить нельзя!", show_alert=True)
         return
@@ -119,7 +118,6 @@ async def _do_single_upgrade(cb: CallbackQuery, session):
     if card is None or card.user_id != cb.from_user.id:
         await cb.answer("Жир не найден.", show_alert=True)
         return None
-    # AGENT1 FATS: блокируем апгрейд только топ-редкости ORDER[-1]
     if card.rarity == data.ORDER[-1]:
         await cb.answer("Жир максимальной редкости улучшить нельзя!", show_alert=True)
         return None
@@ -133,7 +131,6 @@ async def _do_single_upgrade(cb: CallbackQuery, session):
         return None
     user.points -= fee
     ok, new_card = await services.do_upgrade(session, user, card)
-    # AGENT3 QUESTS
     try:
         await services.update_quest_progress(session, user.id, "upgrade1", 1)
         await services.update_quest_progress(session, user.id, "upgrade5", 1)
@@ -160,7 +157,7 @@ async def cb_upgrade_one(cb: CallbackQuery, session):
             f"Цена: {fmt(new_card.base_price)} ФОчек"
         )
     else:
-        # AGENT2 UPGRADES: хранитель мог спасти жир (new_card не None = карта уцелела)
+        # new_card не None = карту спас хранитель
         if new_card is not None:
             text = "🛡️ Неудача, но Хранитель спас ваш жир! Карта уцелела."
         else:
@@ -176,7 +173,6 @@ async def cmd_upgradeall(message: Message, session):
         session, message.from_user.id, message.from_user.username, message.from_user.full_name
     )
     stats = await services.collection_stats(session, user.id)
-    # AGENT1 FATS: максимальной считается последняя редкость ORDER
     upgradable = {k: v for k, v in stats["by_rarity"].items() if k != data.ORDER[-1]}
     if not upgradable:
         await message.answer("У вас нет жиров для улучшения.")
@@ -217,13 +213,11 @@ async def cb_upgrade_all(cb: CallbackQuery, session):
         if ok:
             upgraded.append(new_card)
         elif new_card is not None:
-            # AGENT2 UPGRADES: хранитель спас жир
             saved += 1
         else:
             failed += 1
-    # AGENT3 QUESTS: массовый апгрейд засчитывает попытки
     try:
-        done = len(upgraded) + failed + saved  # AGENT2 UPGRADES: спасённые тоже попытки
+        done = len(upgraded) + failed + saved  # спасённые хранителем тоже считаются попытками
         if done:
             await services.update_quest_progress(session, user.id, "upgrade1", done)
             await services.update_quest_progress(session, user.id, "upgrade5", done)
@@ -238,7 +232,6 @@ async def cb_upgrade_all(cb: CallbackQuery, session):
         parts.append(f"✅ Улучшено: {len(upgraded)} — {names}")
     if failed:
         parts.append(f"💥 Провалено: {failed}")
-    # AGENT2 UPGRADES: спасённые хранителем
     if saved:
         parts.append(f"🛡️ Спасено хранителем: {saved}")
     if skipped:

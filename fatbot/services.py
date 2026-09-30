@@ -77,7 +77,6 @@ async def luck_bonus(session: AsyncSession, user: User) -> float:
     bonus = float(user.luck_lvl or 0)
     if await has_accessory(session, user.id, "fork"):
         bonus += 2.0
-    # AGENT2 UPGRADES: трофей тоже даёт удачу
     if await has_accessory(session, user.id, "trophy"):
         bonus += 2.0
     return bonus
@@ -94,7 +93,6 @@ async def casino_edge(session: AsyncSession, user: User) -> float:
     edge = 0.0
     if await has_accessory(session, user.id, "clover"):
         edge += 1.0
-    # AGENT2 UPGRADES: подкова + ветка лудомана
     if await has_accessory(session, user.id, "horseshoe"):
         edge += 1.0
     edge += 0.5 * float(getattr(user, "gambler_lvl", 0) or 0)
@@ -105,7 +103,7 @@ async def effective_cooldown(session: AsyncSession, user: User) -> timedelta:
     base = max(600, 10800 - (user.speed_lvl or 0) * 180)
     keys = await accessory_keys(session, user.id)
     n = sum(1 for k in keys if k == "clip")
-    # AGENT2 UPGRADES: песочные часы стакаются с зажимом
+    # песочные часы стакаются с зажимом
     n += sum(1 for k in keys if k == "hourglass")
     mult = max(0.70, 0.95 ** n)
     return timedelta(seconds=int(base * mult))
@@ -121,7 +119,7 @@ def roll_rarity(rng, luck_pct_value: float) -> str:
     return rng.choices(data.ORDER, weights=weights)[0]
 
 
-# AGENT1 FATS: блестящие варианты кодируются суффиксом в name (без новых колонок БД)
+# блестящие варианты кодируются суффиксом в name, без новых колонок БД
 def strip_variant_suffix(name: str) -> str:
     for suffix in (f" {data.GOLDEN_SUFFIX}", f" {data.SHINY_SUFFIX}"):
         if name.endswith(suffix):
@@ -151,7 +149,7 @@ def make_card_fields(rarity: str, rng, shiny_bonus: float = 0.0) -> dict:
     if roll < data.GOLDEN_CHANCE:
         name = f"{name} {data.GOLDEN_SUFFIX}"
         price_mult = data.GOLDEN_PRICE_MULT
-    # AGENT2 UPGRADES: коллекционер/магнит повышают шанс shiny (аддитивно)
+    # коллекционер и магнит повышают шанс shiny (аддитивно)
     elif roll < data.GOLDEN_CHANCE + data.SHINY_CHANCE + max(0.0, shiny_bonus):
         name = f"{name} {data.SHINY_SUFFIX}"
         weight = int(weight * data.SHINY_WEIGHT_MULT)
@@ -161,7 +159,6 @@ def make_card_fields(rarity: str, rng, shiny_bonus: float = 0.0) -> dict:
     return fields, flavor
 
 
-# AGENT1 FATS: бонус за полные сеты коллекций
 def collection_set_bonus(owned_names) -> dict:
     owned_base = {strip_variant_suffix(n) for n in owned_names}
     completed = []
@@ -187,7 +184,6 @@ async def user_collection_set_bonus(session: AsyncSession, user_id: int) -> dict
 
 
 async def roll_card(session: AsyncSession, user: User, rng=random) -> tuple[UserCard, str, str]:
-    # AGENT2 UPGRADES: коллекционер/магнит повышают шанс shiny
     fields, flavor = make_card_fields(
         roll_rarity(rng, await luck_bonus(session, user)), rng, await shiny_chance(session, user)
     )
@@ -232,7 +228,7 @@ async def do_upgrade(session: AsyncSession, user: User, card: UserCard, rng=rand
         await session.flush()
         user.upgrades_done += 1
         return True, new_card
-    # AGENT2 UPGRADES: хранитель может спасти жир от сгорания (карта выживает, возвращается как есть)
+    # хранитель может спасти жир от сгорания (карта выживает)
     if rng.random() * 100.0 < await upgrade_protection(session, user):
         await session.flush()
         return False, card
@@ -244,7 +240,6 @@ async def do_upgrade(session: AsyncSession, user: User, card: UserCard, rng=rand
 async def sell_cards(session: AsyncSession, user: User, cards: list[UserCard]) -> int:
     total = sum(c.base_price for c in cards)
     total = int(total * (1.0 + await trader_bonus(session, user) / 100.0))
-    # AGENT2 UPGRADES: престиж навсегда повышает доход
     total = int(total * prestige_bonus(user))
     for c in cards:
         await session.delete(c)
@@ -360,9 +355,7 @@ def workshop_income_hour(user: User) -> int:
     if lvl <= 5:
         base = data.WORKSHOP_BASE_HOUR * lvl
     else:
-        # AGENT2 UPGRADES: прогрессивный доход для lvl>5
         base = int(data.WORKSHOP_BASE_HOUR * (lvl * 2 - 5))
-    # AGENT2 UPGRADES: престиж навсегда повышает доход
     return int(base * (1 + 0.05 * (user.farmer_lvl or 0)) * prestige_bonus(user))
 
 
@@ -405,7 +398,6 @@ async def exchange_fcoin(session: AsyncSession, user: User) -> bool:
 
 
 async def buy_upgrade_level(session: AsyncSession, user: User, key: str) -> bool:
-    # AGENT2 UPGRADES: защита от неизвестных ключей
     if key not in set(data.UPGRADE_KEYS):
         return False
     try:
@@ -426,7 +418,6 @@ async def buy_upgrade_level(session: AsyncSession, user: User, key: str) -> bool
 async def grant_achievements(session: AsyncSession, user: User) -> list[str]:
     stats = await collection_stats(session, user.id)
     views = await views_count(session, user.id)
-    # AGENT3 QUESTS: расширенные условия (25 ачивок)
     from .models import Container, Farm, UserQuest
 
     by_r = stats.get("by_rarity", {})
@@ -451,7 +442,6 @@ async def grant_achievements(session: AsyncSession, user: User) -> list[str]:
         "seller": (user.sales_done or 0) >= 1,
         "gambler": (user.casino_wins or 0) >= 1,
         "star": views >= 1,
-        # AGENT3 QUESTS новые
         "fifty_cards": stats["count"] >= 50,
         "hundred_cards": (user.cards_opened or 0) >= 100 or stats["count"] >= 100,
         "ton_weight": stats["weight"] >= 1000,
@@ -577,7 +567,6 @@ async def update_quest_progress(session: AsyncSession, user_id: int, quest_key: 
     from .models import UserQuest
     from .data import DAILY_QUESTS, WEEKLY_QUESTS
 
-    # AGENT3 QUESTS: поддерживаем daily + weekly + story
     story_defs = getattr(data, "STORY_QUESTS", [])
     quest_def = None
     for q in DAILY_QUESTS + WEEKLY_QUESTS + story_defs:
@@ -645,7 +634,7 @@ async def claim_quest(session: AsyncSession, user_id: int, quest_key: str):
     return quest.reward
 
 
-# AGENT3 QUESTS: ротация 3 daily из 12 и 3 weekly из 10 (детерминировано по юзеру+дате)
+# ротация 3 daily из 12 и 3 weekly из 10 (детерминировано по игроку и дате)
 def _daily_seed(user_id: int, now=None) -> int:
     from .utils import utcnow as _u
     now = now or _u()
@@ -703,7 +692,6 @@ async def claim_all_quests(session: AsyncSession, user_id: int, quest_keys: list
     return claimed_keys, total_points, total_fcoins
 
 
-# AGENT3 QUESTS: сюжет
 async def story_progress(session: AsyncSession, user: User):
     defs = list(getattr(data, "STORY_QUESTS", []))
     if not defs:
@@ -741,7 +729,6 @@ async def claim_story(session: AsyncSession, user_id: int):
     return qdef
 
 
-# AGENT3 QUESTS: уровни игрока
 def calc_xp(user: User) -> int:
     return (
         int(user.cards_opened or 0) * 10
@@ -775,7 +762,6 @@ def player_level(user: User) -> dict:
     }
 
 
-# AGENT3 QUESTS: сезон
 def is_season_active(now=None) -> bool:
     from datetime import datetime
     from .utils import utcnow as _u
@@ -1018,7 +1004,7 @@ def farm_pending_points(farm, bonus: float = 1.0) -> int:
 
     if not farm.is_running or farm.total_calories <= 0:
         return 0
-    # AGENT2 UPGRADES: бонус кухни (повар/аксессуары/престиж) применяется при конвертации
+    # бонус кухни применяется при конвертации
     return int(farm.total_calories * FARM_CALORIE_TO_POINTS * bonus)
 
 
@@ -1027,7 +1013,7 @@ async def farm_collect(session: AsyncSession, farm, bonus: float | None = None) 
     from .utils import utcnow
 
     if bonus is None:
-        # AGENT2 UPGRADES: по умолчанию считаем полный бонус кухни владельца
+        # по умолчанию считаем полный бонус кухни владельца
         user = await session.get(User, farm.user_id)
         bonus = await farm_bonus(session, user) if user is not None else 1.0
     amount = farm_pending_points(farm, bonus)
@@ -1085,7 +1071,6 @@ async def remove_food_from_slot(session: AsyncSession, farm, slot: int):
 async def upgrade_farm(session: AsyncSession, farm):
     from .data import FARM_LEVELS
 
-    # AGENT2 UPGRADES: кап по числу уровней (было захардкожено 3)
     if farm.level >= len(FARM_LEVELS):
         return False, "Максимальный уровень."
 
@@ -1103,7 +1088,6 @@ async def upgrade_farm(session: AsyncSession, farm):
     return True, None
 
 
-# AGENT2 UPGRADES: бонусы новых веток прокачки, аксессуаров и престижа
 def prestige_bonus(user: User) -> float:
     """Множитель дохода за престиж: +10% навсегда за каждый уровень."""
     return 1.0 + float(data.PRESTIGE_INCOME_PER_LVL) * float(getattr(user, "prestige_lvl", 0) or 0)

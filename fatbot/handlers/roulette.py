@@ -9,7 +9,6 @@ router = Router()
 
 @router.message(Command("roulette"))
 async def cmd_roulette(message: Message, session):
-    # AGENT3 QUESTS: засчитываем игру в рулетку
     try:
         user = await services.get_or_create_user(
             session, message.from_user.id, message.from_user.username, message.from_user.full_name

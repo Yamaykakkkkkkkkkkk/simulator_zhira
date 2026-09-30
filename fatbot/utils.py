@@ -25,7 +25,6 @@ CARD_GRADIENT = {
     "epic": ((120, 40, 160), (40, 10, 60)),
     "legendary": ((200, 150, 40), (120, 60, 10)),
     "mythic": ((220, 60, 40), (120, 10, 10)),
-    # AGENT1 FATS: градиенты новых редкостей
     "divine": ((240, 230, 180), (150, 130, 60)),
     "cosmic": ((60, 40, 160), (10, 10, 50)),
     "void": ((40, 20, 80), (5, 5, 15)),
@@ -52,7 +51,7 @@ def card_image(card) -> FSInputFile:
         color = tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(3))
         dr.line([(0, y), (w, y)], fill=color)
 
-    # AGENT1 FATS: имена новых редкостей для карточек (fallback — из data.RARITIES)
+    # названия сериала для новых редкостей (fallback берётся из data.RARITIES)
     try:
         from .data import RARITIES as _RAR
     except Exception:
@@ -81,7 +80,6 @@ def card_image(card) -> FSInputFile:
     price_font = _font(30)
 
     RARITY_STARS = {"common": 1, "rare": 2, "epic": 3, "legendary": 4, "mythic": 5,
-                    # AGENT1 FATS
                     "divine": 6, "cosmic": 7, "void": 8, "absolute": 9}
     stars = "★" * RARITY_STARS.get(card.rarity, 1)
 

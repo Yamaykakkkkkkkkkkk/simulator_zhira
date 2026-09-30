@@ -20,13 +20,11 @@ class User(Base):
     speed_lvl: Mapped[int] = mapped_column(Integer, default=0)
     trader_lvl: Mapped[int] = mapped_column(Integer, default=0)
     farmer_lvl: Mapped[int] = mapped_column(Integer, default=0)
-    # AGENT2 UPGRADES: новые ветки прокачки
     collector_lvl: Mapped[int] = mapped_column(Integer, default=0)
     auctioneer_lvl: Mapped[int] = mapped_column(Integer, default=0)
     gambler_lvl: Mapped[int] = mapped_column(Integer, default=0)
     chef_lvl: Mapped[int] = mapped_column(Integer, default=0)
     keeper_lvl: Mapped[int] = mapped_column(Integer, default=0)
-    # AGENT2 UPGRADES: престиж (rebirth)
     prestige_lvl: Mapped[int] = mapped_column(Integer, default=0)
     workshop_lvl: Mapped[int] = mapped_column(Integer, default=0)
     workshop_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -36,7 +34,7 @@ class User(Base):
     upgrades_done: Mapped[int] = mapped_column(Integer, default=0)
     sales_done: Mapped[int] = mapped_column(Integer, default=0)
     casino_wins: Mapped[int] = mapped_column(Integer, default=0)
-    # AGENT3 QUESTS: шаг сюжетной цепочки (0..len(STORY_QUESTS))
+    # шаг сюжетной цепочки (0..len(STORY_QUESTS))
     story_step: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -156,7 +154,6 @@ class Farm(Base):
     slot2_product: Mapped[str | None] = mapped_column(String(32), nullable=True)
     slot3_product: Mapped[str | None] = mapped_column(String(32), nullable=True)
     slot4_product: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    # AGENT2 UPGRADES: слоты под уровни фермы 4-5
     slot5_product: Mapped[str | None] = mapped_column(String(32), nullable=True)
     slot6_product: Mapped[str | None] = mapped_column(String(32), nullable=True)
     total_calories: Mapped[int] = mapped_column(Integer, default=0)

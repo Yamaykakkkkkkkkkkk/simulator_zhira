@@ -41,7 +41,6 @@ async def cb_buy_container(cb: CallbackQuery, session):
     if error:
         await edit_media(cb, None, f"❌ {error}", None)
         return
-    # AGENT3 QUESTS
     try:
         await services.update_quest_progress(session, user.id, "container1", 1)
         await services.update_quest_progress(session, user.id, "story_13", 1)

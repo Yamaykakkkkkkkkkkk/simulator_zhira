@@ -14,7 +14,6 @@ def farm_status_text(user, farm, bonus: float = 1.0) -> str:
     slots_used = services.farm_slots_used(farm)
     max_slots = services.farm_max_slots(farm)
     cal_per_hour = services.farm_calories_per_hour(farm)
-    # AGENT2 UPGRADES: бонус кухни (повар/аксессуары/престиж)
     pending = services.farm_pending_points(farm, bonus)
 
     status = "✅ Работает" if farm.is_running else "🛑 Выключена"
@@ -115,7 +114,6 @@ async def cb_farm_collect(cb: CallbackQuery, session):
     bonus = await services.farm_bonus(session, user)
     amount = await services.farm_collect(session, farm, bonus)
     await cb.answer()
-    # AGENT3 QUESTS
     try:
         if amount > 0:
             await services.update_quest_progress(session, user.id, "farm1", 1)
@@ -212,7 +210,6 @@ async def cb_farm_upgrade(cb: CallbackQuery, session):
         await cb.answer("Столовая не найдена.", show_alert=True)
         return
 
-    # AGENT2 UPGRADES: кап по числу уровней (было захардкожено 3)
     if farm.level >= len(data.FARM_LEVELS):
         await cb.answer("Максимальный уровень!", show_alert=True)
         return

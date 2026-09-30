@@ -54,7 +54,6 @@ async def open_card(message: Message, session):
     if not no_cooldown:
         user.next_card_at = now + cd
     user.points = (user.points or 0) + card.base_price
-    # AGENT3 QUESTS: прогресс daily/weekly/story
     try:
         await services.update_quest_progress(session, user.id, "open5", 1)
         await services.update_quest_progress(session, user.id, "open50", 1)

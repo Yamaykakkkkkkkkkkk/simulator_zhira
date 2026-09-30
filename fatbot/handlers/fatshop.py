@@ -82,7 +82,6 @@ async def cb_fatshop_buy(cb: CallbackQuery, session):
 
     await services.update_quest_progress(session, user.id, "buy2")
     await services.update_quest_progress(session, user.id, "buy20")
-    # AGENT3 QUESTS: story
     try:
         await services.update_quest_progress(session, user.id, "story_03", 1)
     except Exception:

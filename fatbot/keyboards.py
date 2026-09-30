@@ -36,7 +36,7 @@ def rarities_kb(prefix: str, counts: dict[str, int], back_cb: str | None = None)
         if cnt <= 0:
             continue
         d = data.RARITIES[key]
-        # AGENT1 FATS: безопасный lookup шанса (у топ-редкости апгрейда нет)
+        # у топ-редкости апгрейда нет, поэтому безопасный lookup
         _ch = data.UPGRADE_CHANCE.get(key)
         chance = f" ({int(_ch * 100)}%)" if prefix == "upr" and _ch is not None else ""
         label = f"{d['emoji']} {d['name']}{chance} [{cnt}]"
@@ -160,7 +160,6 @@ def shop_kb(owned: set[str]) -> InlineKeyboardMarkup:
 
 
 def upgrades_kb(user) -> InlineKeyboardMarkup:
-    # AGENT2 UPGRADES: короткие подсказки эффектов (ветки берутся из data.UPGRADES)
     hints = {
         "luck": "+удч",
         "speed": "−кд",

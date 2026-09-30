@@ -236,7 +236,7 @@ async def cb_avbuy(cb: CallbackQuery, session):
         return
     seller = await session.get(User, l.seller_id)
     buyer.points -= l.price
-    # AGENT2 UPGRADES: комиссия с учётом аукциониста/сейфа продавца
+    # комиссия с учётом аукциониста и сейфа продавца
     fee = await services.market_fee(session, seller)
     proceeds = int(l.price * (1 - fee))
     seller.points += proceeds
@@ -244,7 +244,6 @@ async def cb_avbuy(cb: CallbackQuery, session):
     card.listed = False
     l.active = False
     buyer.sales_done += 1
-    # AGENT3 QUESTS: авито-продажи продавцу
     try:
         await services.update_quest_progress(session, seller.id, "avito_sell", l.price)
         await services.update_quest_progress(session, seller.id, "sell3", 1)

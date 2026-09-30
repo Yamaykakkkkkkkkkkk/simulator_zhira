@@ -24,7 +24,7 @@ def quests_text(user) -> str:
     daily_left = daily_reset - now
     weekly_left = weekly_reset - now
 
-    # AGENT3 QUESTS: ротация — каждому юзеру 3 daily из 12 и 3 weekly из 10
+    # ротация: каждому игроку 3 daily из 12 и 3 weekly из 10
     try:
         weekly_defs = services.get_user_weekly_quests(user.id)
     except Exception:
@@ -199,7 +199,6 @@ async def cb_quest_claim(cb: CallbackQuery, session):
     await edit_media(cb, None, f"✅ Награда получена: {fmt(reward)} ФОчек{extra}!")
 
 
-# AGENT3 QUESTS: забрать всё
 @router.callback_query(lambda c: c.data == "quest_claim_all")
 async def cb_quest_claim_all(cb: CallbackQuery, session):
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")

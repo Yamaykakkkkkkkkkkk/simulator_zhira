@@ -51,7 +51,6 @@ async def cb_sell_one(cb: CallbackQuery, session):
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
     price_before = card.base_price
     total = await sell_cards(session, user, [card])
-    # AGENT3 QUESTS
     try:
         await services.update_quest_progress(session, user.id, "sell3", 1)
         await services.update_quest_progress(session, user.id, "sell20", 1)
@@ -90,7 +89,6 @@ async def cb_sellall_go(cb: CallbackQuery, session):
         return
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
     total = await sell_cards(session, user, cards)
-    # AGENT3 QUESTS
     try:
         await services.update_quest_progress(session, user.id, "sell3", len(cards))
         await services.update_quest_progress(session, user.id, "sell20", len(cards))
