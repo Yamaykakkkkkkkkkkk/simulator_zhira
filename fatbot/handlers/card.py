@@ -54,6 +54,14 @@ async def open_card(message: Message, session):
     if not no_cooldown:
         user.next_card_at = now + cd
     user.points = (user.points or 0) + card.base_price
+    # AGENT3 QUESTS: прогресс daily/weekly/story
+    try:
+        await services.update_quest_progress(session, user.id, "open5", 1)
+        await services.update_quest_progress(session, user.id, "open50", 1)
+        for _sk in ("story_01", "story_05", "story_09", "story_15", "story_17"):
+            await services.update_quest_progress(session, user.id, _sk, 1)
+    except Exception:
+        pass
     achievements = await services.grant_achievements(session, user)
     text = card_text(user, card, flavor)
     if ref_msg:

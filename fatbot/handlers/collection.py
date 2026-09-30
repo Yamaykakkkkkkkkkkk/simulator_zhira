@@ -36,9 +36,21 @@ async def cmd_myfats(message: Message, session):
     if stats["count"] == 0:
         await message.answer(f"@{user.username or user.id}, ваша коллекция пуста. Напишите «ФКарточка», чтобы выбить первого жира!")
         return
+    # AGENT1 FATS: бонус за полные сеты коллекций
+    set_info = await services.user_collection_set_bonus(session, user.id)
+    set_lines = ""
+    if set_info["completed"]:
+        names = ", ".join(f"{s['name']} (+{fmt(s['bonus'])})" for s in set_info["completed"])
+        set_lines = f"\n🎁 Полные сеты: {names} | Бонус: +{fmt(set_info['total_bonus'])} ФОчек"
+    else:
+        best = sorted(set_info["progress"], key=lambda p: (p["have"] / max(1, p["need"])), reverse=True)
+        top = [p for p in best if p["have"] > 0][:2]
+        if top:
+            set_lines = "\n📦 Сеты: " + "; ".join(f"{p['name']} {p['have']}/{p['need']}" for p in top)
     text = (
         f"@{user.username or user.id}, выберите категорию ваших жиров:\n\n"
         f"🃏 Всего: {stats['count']} | ⚖️ {fmt(stats['weight'])} кг | 💰 {fmt(stats['value'])} ФОчек"
+        f"{set_lines}"
     )
     await message.answer(text, reply_markup=rarities_kb("coll", stats["by_rarity"], back_cb="noop"))
 

@@ -52,6 +52,11 @@ async def cb_wsnew(cb: CallbackQuery, session):
     user.points -= data.WORKSHOP_CREATE_COST
     user.workshop_lvl = 1
     user.workshop_at = utcnow()
+    # AGENT3 QUESTS: постройка мастерской для story_07
+    try:
+        await services.update_quest_progress(session, user.id, "story_07", 1)
+    except Exception:
+        pass
     await cb.answer()
     await edit_media(cb, None, "🏭 Мастерская построена! Доход капает каждый час. Не забывайте собирать его в /myworkshop")
 
@@ -60,8 +65,11 @@ def _status_text(user) -> str:
     pending = services.workshop_pending(user)
     income = services.workshop_income_hour(user)
     max_lvl = user.workshop_lvl >= data.WORKSHOP_MAX_LVL
+    # AGENT2 UPGRADES: название тира мастерской
+    tiers = getattr(data, "WORKSHOP_TIERS", [])
+    tier = tiers[(user.workshop_lvl or 1) - 1] if 1 <= (user.workshop_lvl or 0) <= len(tiers) else ""
     lines = [
-        f"🏭 Ваша мастерская [ур. {user.workshop_lvl}/{data.WORKSHOP_MAX_LVL}]",
+        f"🏭 Ваша мастерская [ур. {user.workshop_lvl}/{data.WORKSHOP_MAX_LVL}]" + (f" — {tier}" if tier else ""),
         f"📈 Доход: {fmt(income)} ФОчек/час (максимум за сутки: {fmt(income * 24)})",
     ]
     if max_lvl:
@@ -91,6 +99,17 @@ async def cb_wscollect(cb: CallbackQuery, session):
     if amount <= 0:
         await edit_media(cb, None, "Пока нечего собирать. Загляните чуть позже!", workshop_kb(True))
         return
+    # AGENT3 QUESTS: workshop daily/weekly/story + earn
+    try:
+        await services.update_quest_progress(session, user.id, "workshop1", 1)
+        await services.update_quest_progress(session, user.id, "workshop_collect", amount)
+        await services.update_quest_progress(session, user.id, "workshop2m", amount)
+        await services.update_quest_progress(session, user.id, "earn5m", amount)
+        await services.update_quest_progress(session, user.id, "story_08", amount)
+        await services.update_quest_progress(session, user.id, "story_16", amount)
+        await services.update_quest_progress(session, user.id, "story_18", amount)
+    except Exception:
+        pass
     achievements = await services.grant_achievements(session, user)
     text = f"💰 Собрано {fmt(amount)} ФОчек!\nБаланс: {fmt(user.points)}"
     if achievements:

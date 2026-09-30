@@ -9,12 +9,13 @@ from ..utils import edit_media, fmt
 router = Router()
 
 
-def farm_status_text(user, farm) -> str:
+def farm_status_text(user, farm, bonus: float = 1.0) -> str:
     level_data = next((l for l in data.FARM_LEVELS if l["lvl"] == farm.level), data.FARM_LEVELS[0])
     slots_used = services.farm_slots_used(farm)
     max_slots = services.farm_max_slots(farm)
     cal_per_hour = services.farm_calories_per_hour(farm)
-    pending = services.farm_pending_points(farm)
+    # AGENT2 UPGRADES: бонус кухни (повар/аксессуары/престиж)
+    pending = services.farm_pending_points(farm, bonus)
 
     status = "✅ Работает" if farm.is_running else "🛑 Выключена"
 
@@ -23,6 +24,7 @@ def farm_status_text(user, farm) -> str:
         f"📋 Уровень: {level_data['name']} (ур. {farm.level})",
         f"🍳 Состояние: {status}\n",
         f"📊 Эффективность: x{level_data['efficiency']}",
+        f"🌟 Бонус кухни: x{bonus:.2f}",
         f"📈 Калорий в час: {cal_per_hour}",
         f"💰 К сбору: {fmt(pending)} ФОчек\n",
         f"🍽 Слоты: {slots_used}/{max_slots}\n",
@@ -60,7 +62,7 @@ async def cmd_farm(message: Message, session):
         await message.answer(text, reply_markup=kb)
         return
 
-    text = farm_status_text(user, farm)
+    text = farm_status_text(user, farm, await services.farm_bonus(session, user))
     kb = ikb([
         [("▶️ Включить" if not farm.is_running else "⏸ Выключить", "farm_toggle")],
         [("🍽 Добавить еду", "farm_add_food"), ("💰 Собрать", "farm_collect")],
@@ -98,7 +100,7 @@ async def cb_farm_toggle(cb: CallbackQuery, session):
     await cb.answer()
 
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
-    text = farm_status_text(user, farm)
+    text = farm_status_text(user, farm, await services.farm_bonus(session, user))
     await edit_media(cb, None, f"🍳 Столовая {status}!\n\n{text}", None)
 
 
@@ -109,14 +111,24 @@ async def cb_farm_collect(cb: CallbackQuery, session):
         await cb.answer("Столовая не найдена.", show_alert=True)
         return
 
-    amount = await services.farm_collect(session, farm)
-    await cb.answer()
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
+    bonus = await services.farm_bonus(session, user)
+    amount = await services.farm_collect(session, farm, bonus)
+    await cb.answer()
+    # AGENT3 QUESTS
+    try:
+        if amount > 0:
+            await services.update_quest_progress(session, user.id, "farm1", 1)
+            await services.update_quest_progress(session, user.id, "earn5m", amount)
+            await services.update_quest_progress(session, user.id, "story_16", amount)
+            await services.update_quest_progress(session, user.id, "story_18", amount)
+    except Exception:
+        pass
 
     if amount > 0:
-        text = f"💰 Собрано {fmt(amount)} ФОчек!\n\n{farm_status_text(user, farm)}"
+        text = f"💰 Собрано {fmt(amount)} ФОчек!\n\n{farm_status_text(user, farm, bonus)}"
     else:
-        text = f"Пока нечего собирать. Включите столовую и подождите.\n\n{farm_status_text(user, farm)}"
+        text = f"Пока нечего собирать. Включите столовую и подождите.\n\n{farm_status_text(user, farm, bonus)}"
 
     kb = ikb([
         [("▶️ Включить" if not farm.is_running else "⏸ Выключить", "farm_toggle")],
@@ -189,7 +201,7 @@ async def cb_farm_place(cb: CallbackQuery, session):
 
     await cb.answer()
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
-    text = farm_status_text(user, farm)
+    text = farm_status_text(user, farm, await services.farm_bonus(session, user))
     await edit_media(cb, None, f"✅ {product['emoji']} {product['name']} установлено в слот {slot}!\n\n{text}", None)
 
 
@@ -200,7 +212,8 @@ async def cb_farm_upgrade(cb: CallbackQuery, session):
         await cb.answer("Столовая не найдена.", show_alert=True)
         return
 
-    if farm.level >= 3:
+    # AGENT2 UPGRADES: кап по числу уровней (было захардкожено 3)
+    if farm.level >= len(data.FARM_LEVELS):
         await cb.answer("Максимальный уровень!", show_alert=True)
         return
 
@@ -239,7 +252,7 @@ async def cb_farm_do_upgrade(cb: CallbackQuery, session):
 
     await cb.answer("✅ Столовая улучшена!")
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
-    text = farm_status_text(user, farm)
+    text = farm_status_text(user, farm, await services.farm_bonus(session, user))
     await edit_media(cb, None, f"🎉 Столовая улучшена!\n\n{text}", None)
 
 
@@ -251,7 +264,7 @@ async def cb_farm_back(cb: CallbackQuery, session):
         await edit_media(cb, None, "Столовая не найдена.", None)
         return
 
-    text = farm_status_text(user, farm)
+    text = farm_status_text(user, farm, await services.farm_bonus(session, user))
     kb = ikb([
         [("▶️ Включить" if not farm.is_running else "⏸ Выключить", "farm_toggle")],
         [("🍽 Добавить еду", "farm_add_food"), ("💰 Собрать", "farm_collect")],

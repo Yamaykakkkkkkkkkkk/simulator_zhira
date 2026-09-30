@@ -36,7 +36,9 @@ def rarities_kb(prefix: str, counts: dict[str, int], back_cb: str | None = None)
         if cnt <= 0:
             continue
         d = data.RARITIES[key]
-        chance = f" ({int(data.UPGRADE_CHANCE[key] * 100)}%)" if prefix == "upr" else ""
+        # AGENT1 FATS: безопасный lookup шанса (у топ-редкости апгрейда нет)
+        _ch = data.UPGRADE_CHANCE.get(key)
+        chance = f" ({int(_ch * 100)}%)" if prefix == "upr" and _ch is not None else ""
         label = f"{d['emoji']} {d['name']}{chance} [{cnt}]"
         row.append(InlineKeyboardButton(text=label, callback_data=f"{prefix}:{key}"))
         if len(row) == 2:
@@ -158,14 +160,27 @@ def shop_kb(owned: set[str]) -> InlineKeyboardMarkup:
 
 
 def upgrades_kb(user) -> InlineKeyboardMarkup:
+    # AGENT2 UPGRADES: короткие подсказки эффектов (ветки берутся из data.UPGRADES)
+    hints = {
+        "luck": "+удч",
+        "speed": "−кд",
+        "trader": "+прод",
+        "farmer": "+маст",
+        "collector": "+shiny",
+        "auctioneer": "−ком",
+        "gambler": "+каз",
+        "chef": "+ферм",
+        "keeper": "+сейв",
+    }
     rows = []
     for u in data.UPGRADES:
-        lvl = getattr(user, f"{u['key']}_lvl")
+        lvl = getattr(user, f"{u['key']}_lvl", 0) or 0
+        tag = hints.get(u["key"], "")
         if lvl >= data.UPGRADE_MAX_LVL:
             label = f"{u['emoji']} {u['name']} [{lvl}] — MAX"
             cb = "noop"
         else:
-            label = f"{u['emoji']} {u['name']} [{lvl}] — {data.UPGRADE_COST(lvl):,}"
+            label = f"{u['emoji']} {u['name']} [{lvl}] {tag} — {data.UPGRADE_COST(lvl):,}"
             cb = f"ubuy:{u['key']}"
         rows.append([InlineKeyboardButton(text=label, callback_data=cb)])
     rows.append([InlineKeyboardButton(text="◀️ В меню", callback_data="noop")])

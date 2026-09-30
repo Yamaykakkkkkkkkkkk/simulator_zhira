@@ -236,17 +236,32 @@ async def cb_avbuy(cb: CallbackQuery, session):
         return
     seller = await session.get(User, l.seller_id)
     buyer.points -= l.price
-    seller.points += int(l.price * (1 - data.MARKET_FEE))
+    # AGENT2 UPGRADES: комиссия с учётом аукциониста/сейфа продавца
+    fee = await services.market_fee(session, seller)
+    proceeds = int(l.price * (1 - fee))
+    seller.points += proceeds
     card.user_id = buyer.id
     card.listed = False
     l.active = False
     buyer.sales_done += 1
+    # AGENT3 QUESTS: авито-продажи продавцу
+    try:
+        await services.update_quest_progress(session, seller.id, "avito_sell", l.price)
+        await services.update_quest_progress(session, seller.id, "sell3", 1)
+        await services.update_quest_progress(session, seller.id, "sell20", 1)
+        await services.update_quest_progress(session, seller.id, "earn5m", proceeds)
+        await services.update_quest_progress(session, seller.id, "story_02", 1)
+        await services.update_quest_progress(session, seller.id, "story_10", 1)
+        await services.update_quest_progress(session, seller.id, "story_16", proceeds)
+        await services.update_quest_progress(session, seller.id, "story_18", proceeds)
+    except Exception:
+        pass
     achievements = await services.grant_achievements(session, buyer)
-    fee_note = int(l.price * data.MARKET_FEE)
+    fee_note = int(l.price * fee)
     await cb.answer("✅ Куплено!")
     text = (
         f"✅ Вы купили «{card.name}» ({card.weight} кг) за {fmt(l.price)} ФОчек.\n"
-        f"(Продавец получил {fmt(int(l.price * (1 - data.MARKET_FEE)))}, комиссия {fmt(fee_note)})"
+        f"(Продавец получил {fmt(proceeds)}, комиссия {fmt(fee_note)})"
     )
     if achievements:
         text += "\n🏆 " + "\n🏆 ".join(achievements)
@@ -254,7 +269,7 @@ async def cb_avbuy(cb: CallbackQuery, session):
     try:
         await cb.bot.send_message(
             seller.id,
-            f"💰 Ваше объявление №{lid} куплено! Вам начислено {fmt(int(l.price * (1 - data.MARKET_FEE)))} ФОчек.",
+            f"💰 Ваше объявление №{lid} куплено! Вам начислено {fmt(proceeds)} ФОчек.",
         )
     except Exception:
         pass

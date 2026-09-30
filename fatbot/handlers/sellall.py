@@ -51,6 +51,17 @@ async def cb_sell_one(cb: CallbackQuery, session):
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
     price_before = card.base_price
     total = await sell_cards(session, user, [card])
+    # AGENT3 QUESTS
+    try:
+        await services.update_quest_progress(session, user.id, "sell3", 1)
+        await services.update_quest_progress(session, user.id, "sell20", 1)
+        await services.update_quest_progress(session, user.id, "story_02", 1)
+        await services.update_quest_progress(session, user.id, "story_10", 1)
+        await services.update_quest_progress(session, user.id, "earn5m", total)
+        await services.update_quest_progress(session, user.id, "story_16", total)
+        await services.update_quest_progress(session, user.id, "story_18", total)
+    except Exception:
+        pass
     achievements = await services.grant_achievements(session, user)
     text = f"💸 Жир «{card.name}» продан за {fmt(total)} ФОчек."
     if total != price_before:
@@ -79,6 +90,17 @@ async def cb_sellall_go(cb: CallbackQuery, session):
         return
     user = await services.get_or_create_user(session, cb.from_user.id, None, "")
     total = await sell_cards(session, user, cards)
+    # AGENT3 QUESTS
+    try:
+        await services.update_quest_progress(session, user.id, "sell3", len(cards))
+        await services.update_quest_progress(session, user.id, "sell20", len(cards))
+        await services.update_quest_progress(session, user.id, "story_02", len(cards))
+        await services.update_quest_progress(session, user.id, "story_10", len(cards))
+        await services.update_quest_progress(session, user.id, "earn5m", total)
+        await services.update_quest_progress(session, user.id, "story_16", total)
+        await services.update_quest_progress(session, user.id, "story_18", total)
+    except Exception:
+        pass
     achievements = await services.grant_achievements(session, user)
     text = (
         f"💸 Продано {len(cards)} жиров ({data.RARITIES[rarity]['name']}) за {fmt(total)} ФОчек.\n"

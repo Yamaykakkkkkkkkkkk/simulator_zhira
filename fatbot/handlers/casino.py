@@ -87,6 +87,16 @@ async def cb_coinflip(cb: CallbackQuery, session):
         text = f"🪙 Выпал {side} — вы выиграли {fmt(bet)} ФОчек!\n💰 Баланс: {fmt(user.points)}"
     else:
         text = f"🪙 Выпал {side} — вы проиграли {fmt(bet)} ФОчек.\n💰 Баланс: {fmt(user.points)}"
+    # AGENT3 QUESTS
+    try:
+        await services.update_quest_progress(session, user.id, "casino1", 1)
+        await services.update_quest_progress(session, user.id, "story_04", 1)
+        if win:
+            await services.update_quest_progress(session, user.id, "casino_win1", 1)
+            await services.update_quest_progress(session, user.id, "casino_win10", 1)
+            await services.update_quest_progress(session, user.id, "story_11", 1)
+    except Exception:
+        pass
     achievements = await services.grant_achievements(session, user)
     if achievements:
         text += "\n🏆 " + "\n🏆 ".join(achievements)
@@ -106,6 +116,16 @@ async def cb_slots(cb: CallbackQuery, session):
     if payout > 0:
         user.points += payout
         user.casino_wins += 1
+    # AGENT3 QUESTS
+    try:
+        await services.update_quest_progress(session, user.id, "casino1", 1)
+        await services.update_quest_progress(session, user.id, "story_04", 1)
+        if payout > 0:
+            await services.update_quest_progress(session, user.id, "casino_win1", 1)
+            await services.update_quest_progress(session, user.id, "casino_win10", 1)
+            await services.update_quest_progress(session, user.id, "story_11", 1)
+    except Exception:
+        pass
     result = (
         f"🎉 Джекпот! Выигрыш {fmt(payout - bet)} ФОчек!"
         if mult >= 12

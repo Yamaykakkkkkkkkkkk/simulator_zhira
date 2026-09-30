@@ -246,6 +246,14 @@ async def cb_trade_finish(cb: CallbackQuery, session):
         return
     a_card.user_id, b_card.user_id = cb.from_user.id, init_id
     TRADES.pop(init_id, None)
+    # AGENT3 QUESTS: обмен засчитываем обоим
+    try:
+        for _uid in (cb.from_user.id, init_id):
+            await services.update_quest_progress(session, _uid, "trade1", 1)
+            await services.update_quest_progress(session, _uid, "trade5", 1)
+            await services.update_quest_progress(session, _uid, "story_14", 1)
+    except Exception:
+        pass
     await cb.answer("✅ Обмен выполнен!")
     await edit_media(cb, None, f"✅ Обмен выполнен! Вы получили: {a_card.name} ({a_card.weight} кг)", None)
     try:
